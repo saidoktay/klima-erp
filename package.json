@@ -1,5 +1,8 @@
 {
   "name": "klima-erp",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "private": true,
   "version": "0.0.0",
   "type": "module",

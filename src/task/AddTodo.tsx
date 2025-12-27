@@ -1,12 +1,58 @@
-import { Paper } from "@mui/material";
-import { Box } from "@mui/system";
 import React from "react";
-import { TextField } from "@mui/material";
-import { Select, MenuItem } from "@mui/material";
-import { useState } from "react";
+import { Paper, Typography } from "@mui/material";
+import { Box } from "@mui/system";
 
-export const AddTodo = () => {
+import { useState } from "react";
+import { Autocomplete, TextField, Button } from "@mui/material";
+import { Adress } from "../components/Adress";
+
+type AddTodoFormData = {
+  jobType: string;
+  customerName: string;
+  phone: string;
+  address: {
+    city: string;
+    district: string;
+    quarter: string;
+    detail: string;
+  };
+  process: string;
+  price: string;
+};
+
+type AddTodoProps = {
+  onClose: () => void;
+  onSave: (data: AddTodoFormData) => void;
+};
+
+export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
+  const oldValues = ["Montaj", "Arıza", "Bakım"];
   const [jobType, setJobType] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const [address, setAddress] = useState({
+    city: "",
+    district: "",
+    quarter: "",
+    detail: "",
+  });
+
+  const [process, setProcess] = useState("");
+  const [price, setPrice] = useState("");
+
+  const handleSave = () => {
+    const formData = {
+      jobType,
+      customerName,
+      phone,
+      address,
+      process,
+      price,
+    };
+    onSave(formData);
+  };
+
   return (
     <Box
       sx={{
@@ -24,25 +70,111 @@ export const AddTodo = () => {
     >
       <Paper
         sx={{
-          width: "600px",
-          height: "400px",
+          width: "800px",
           padding: "20px",
           zIndex: "1100",
+          borderRadius: "30px",
         }}
       >
-        <Box sx={{ display: "flex", gap: "5px" }}>
-          <Select
-            autoWidth
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            paddingBottom: "5px",
+          }}
+        >
+          <Typography variant="h4">İş - Kayıt</Typography>
+        </Box>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "5px",
+          }}
+        >
+          <Autocomplete
+            freeSolo
+            options={oldValues}
             value={jobType}
-            onChange={(e) => setJobType(e.target.value)}
-            label="İş Türü"
-          >
-            <MenuItem value="temizlik">Temizlik</MenuItem>
-            <MenuItem value="tamir">Tamir</MenuItem>
-            <MenuItem value="bakim">Bakım</MenuItem>
-          </Select>
-          <TextField label="Müşteri Adı:" multiline minRows={1} />
-          <TextField label="Tel No:" multiline minRows={1} />
+            onInputChange={(e, newInputValue) => {
+              setJobType(newInputValue);
+            }}
+            renderInput={(params) => (
+              <TextField {...params} fullWidth label="İş Türü" />
+            )}
+          />
+          <TextField
+            sx={{
+              "& .MuiInputBase-inputMultiline": {
+                lineHeight: "1.5",
+              },
+            }}
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            label="Müşteri Adı:"
+            multiline
+            fullWidth
+            minRows={1}
+          />
+          <TextField
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            label="Tel No:"
+          />
+        </Box>
+        <Box sx={{ mt: 1, mb: 1 }}>
+          <Typography variant="h5">Adres</Typography>
+        </Box>
+
+        <Box>
+          <Adress
+            onChange={(addr) => {
+              setAddress(addr);
+            }}
+          />
+        </Box>
+        <Box sx={{ padding: "5px", display: "flex", justifyContent: "center" }}>
+          <Typography variant="h5">İşlem/Fiyat</Typography>
+        </Box>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "3fr 1fr",
+            gap: "5px",
+          }}
+        >
+          <TextField
+            label="Yapılacak İşlem"
+            value={process}
+            onChange={(e) => setProcess(e.target.value)}
+            multiline
+            minRows={1}
+            fullWidth
+            placeholder="Cihaz montajı yapılıp,eski cihaz sökülecek"
+          />
+          <TextField
+            label="Fiyat (₺)"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            type="number"
+            fullWidth
+          />
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 2,
+            mt: 3,
+          }}
+        >
+          <Button variant="outlined" color="inherit" onClick={onClose}>
+            İptal
+          </Button>
+
+          <Button variant="contained" onClick={handleSave}>
+            Kaydet
+          </Button>
         </Box>
       </Paper>
     </Box>

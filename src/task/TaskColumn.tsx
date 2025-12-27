@@ -43,7 +43,7 @@ const TaskColumn = ({ title, status, tasks, onAddClick }: TaskColumnProps) => {
 
       <Box>
         {filteredTasks.map((task) => (
-          <TaskCard key={task.id} title={task.title} />
+          <TaskCard key={task.id} task={task} />
         ))}
       </Box>
     </Paper>
