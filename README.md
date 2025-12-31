@@ -25,3 +25,4 @@ Node: `>=22 <23`
 npm install
 npm run dev
 ```
+> Note: The demo video is in Turkish and showcases the current development progress of the project.
