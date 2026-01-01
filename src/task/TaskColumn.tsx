@@ -1,26 +1,39 @@
-import { Box, Typography, Paper } from "@mui/material";
-import TaskCard from "./TaskCard";
-import type { Task, TaskStatus } from "../types/task";
+import { Box, Typography, Paper, IconButton } from "@mui/material";
 import AddBoxIcon from "@mui/icons-material/AddBox";
-import { IconButton } from "@mui/material";
+import type { Task, TaskStatus } from "../types/task";
+import TaskCard from "./TaskCard";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 
 type TaskColumnProps = {
   title: string;
   status: TaskStatus;
-  tasks: Task[];
+  taskIds: number[];
+  tasksById: Record<number, Task>;
   onAddClick?: () => void;
 };
 
-const TaskColumn = ({ title, status, tasks, onAddClick }: TaskColumnProps) => {
-  const filteredTasks = tasks.filter((task) => task.status === status);
+const TaskColumn = ({
+  title,
+  status,
+  taskIds,
+  tasksById,
+  onAddClick,
+}: TaskColumnProps) => {
+  const { setNodeRef } = useDroppable({ id: status });
 
   return (
     <Paper
+      ref={setNodeRef}
       elevation={5}
       sx={{
         width: 300,
         padding: 2,
         backgroundColor: "#f9f9f9",
+        minHeight: 300,
       }}
     >
       <Typography
@@ -41,11 +54,13 @@ const TaskColumn = ({ title, status, tasks, onAddClick }: TaskColumnProps) => {
         )}
       </Typography>
 
-      <Box>
-        {filteredTasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
-        ))}
-      </Box>
+      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+        <Box sx={{ minHeight: 80 }}>
+          {taskIds.map((id) => (
+            <TaskCard key={id} task={tasksById[id]} />
+          ))}
+        </Box>
+      </SortableContext>
     </Paper>
   );
 };

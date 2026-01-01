@@ -1,6 +1,5 @@
-import React from "react";
+import { Box, Button, Paper, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-import { Box, Button, TextField, Typography, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -13,7 +12,7 @@ const Login = () => {
     if (user === "nuri" && password === "12345") {
       navigate("/Home");
     } else {
-      alert("Email veya şifre yanlış!");
+      alert("Email veya Şifre yanlış!");
     }
   };
 
@@ -38,11 +37,11 @@ const Login = () => {
         }}
       >
         <Typography variant="h5" textAlign="center">
-          Giriş Yap
+          {"Giriş Yap"}
         </Typography>
 
         <TextField
-          label="Email / Kullanıcı Adı"
+          label={"E-mail"}
           variant="outlined"
           fullWidth
           value={user}
@@ -59,7 +58,7 @@ const Login = () => {
         />
 
         <Button variant="contained" fullWidth onClick={handleLogin}>
-          Giriş Yap
+          {"Giriş Yap"}
         </Button>
       </Paper>
     </Box>

@@ -1,8 +1,6 @@
-import { Box, Autocomplete, TextField } from "@mui/material";
-import React from "react";
-import { useState } from "react";
+import { Autocomplete, Box, TextField } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 import { cityValues, districtValues, quarterValues } from "../data/adressData";
-import { useEffect } from "react";
 
 type AdressProps = {
   onChange: (address: {
@@ -19,8 +17,13 @@ export const Adress = ({ onChange }: AdressProps) => {
   const [quarter, setQuarter] = useState("");
   const [detail, setDetail] = useState("");
 
+  const onChangeRef = useRef(onChange);
   useEffect(() => {
-    onChange({
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    onChangeRef.current({
       city,
       district,
       quarter,
@@ -40,25 +43,25 @@ export const Adress = ({ onChange }: AdressProps) => {
         freeSolo
         options={cityValues}
         value={city}
-        onInputChange={(e, v) => setCity(v)}
+        onInputChange={(_, v) => setCity(v)}
         renderInput={(params) => <TextField {...params} label="İL" />}
       />
       <Autocomplete
         freeSolo
         options={districtValues}
         value={district}
-        onInputChange={(e, v) => setDistrict(v)}
+        onInputChange={(_, v) => setDistrict(v)}
         renderInput={(params) => <TextField {...params} label="İLÇE" />}
       />
       <Autocomplete
         freeSolo
         options={quarterValues}
         value={quarter}
-        onInputChange={(e, v) => setQuarter(v)}
-        renderInput={(params) => <TextField {...params} label="MAHALLE" />}
+        onInputChange={(_, v) => setQuarter(v)}
+        renderInput={(params) => <TextField {...params} label="Mahalle" />}
       />
       <TextField
-        label="Detaylı Adres"
+        label={"Detaylı Adres"}
         value={detail}
         onChange={(e) => setDetail(e.target.value)}
         multiline

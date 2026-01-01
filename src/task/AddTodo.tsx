@@ -1,9 +1,12 @@
-import React from "react";
-import { Paper, Typography } from "@mui/material";
+import {
+  Autocomplete,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { Box } from "@mui/system";
-
 import { useState } from "react";
-import { Autocomplete, TextField, Button } from "@mui/material";
 import { Adress } from "../components/Adress";
 
 type AddTodoFormData = {
@@ -83,7 +86,7 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
             paddingBottom: "5px",
           }}
         >
-          <Typography variant="h4">İş - Kayıt</Typography>
+          <Typography variant="h4">{"İş Kayıt"}</Typography>
         </Box>
         <Box
           sx={{
@@ -96,11 +99,11 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
             freeSolo
             options={oldValues}
             value={jobType}
-            onInputChange={(e, newInputValue) => {
+            onInputChange={(_, newInputValue) => {
               setJobType(newInputValue);
             }}
             renderInput={(params) => (
-              <TextField {...params} fullWidth label="İş Türü" />
+              <TextField {...params} fullWidth label={"İş Türü:"} />
             )}
           />
           <TextField
@@ -111,7 +114,7 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
             }}
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            label="Müşteri Adı:"
+            label={"Müşteri Adı:"}
             multiline
             fullWidth
             minRows={1}
@@ -134,7 +137,7 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
           />
         </Box>
         <Box sx={{ padding: "5px", display: "flex", justifyContent: "center" }}>
-          <Typography variant="h5">İşlem/Fiyat</Typography>
+          <Typography variant="h5">{"İşlem/Fiyat"}</Typography>
         </Box>
         <Box
           sx={{
@@ -144,16 +147,16 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
           }}
         >
           <TextField
-            label="Yapılacak İşlem"
+            label={"Yapılacak İşlem"}
             value={process}
             onChange={(e) => setProcess(e.target.value)}
             multiline
             minRows={1}
             fullWidth
-            placeholder="Cihaz montajı yapılıp,eski cihaz sökülecek"
+            placeholder={"Cihaz montajı yapılıp eski cihaz sökülecek"}
           />
           <TextField
-            label="Fiyat (₺)"
+            label={"Fiyat (₺)"}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             type="number"
@@ -169,7 +172,7 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
           }}
         >
           <Button variant="outlined" color="inherit" onClick={onClose}>
-            İptal
+            {"iptal"}
           </Button>
 
           <Button variant="contained" onClick={handleSave}>
