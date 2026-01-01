@@ -1,0 +1,4 @@
+body.dnd-dragging,
+body.dnd-dragging * {
+  cursor: grabbing !important;
+}

@@ -1,4 +1,6 @@
+import AddTaskIcon from "@mui/icons-material/AddTask";
 import {
+  Box,
   Drawer,
   List,
   ListItem,
@@ -6,9 +8,7 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
-  Box,
 } from "@mui/material";
-import AddTaskIcon from "@mui/icons-material/AddTask";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../image/logo/logo.png";
 
@@ -47,7 +47,7 @@ const Sidebar = () => {
               to="/home"
               selected={location.pathname === "/home"}
             >
-              <ListItemText primary="İş-Takip" />
+              <ListItemText primary="İş Takip" />
               <ListItemIcon>
                 <AddTaskIcon fontSize="large" />
               </ListItemIcon>
