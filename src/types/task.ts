@@ -1,20 +1,15 @@
-export type TaskStatus = "todo" | "in-progress" | "done";
-
 export type Task = {
-  id: number;
-  status: TaskStatus;
-
-  jobType: string;
+  id: string;
+  status: "todo" | "inprogress" | "done";
+  taskType: string;
   customerName: string;
-  phone: string;
-
+  customerNumber: string;
   address: {
     city: string;
     district: string;
     quarter: string;
     detail: string;
   };
-
-  process: string;
+  work: string;
   price: string;
 };

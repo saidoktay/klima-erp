@@ -1,196 +1,141 @@
-import { Box } from "@mui/material";
-import { useState } from "react";
-import type { Task, TaskStatus } from "../types/task";
-import { AddTodo } from "./AddTodo";
+import { Box, Typography, Modal, IconButton } from "@mui/material";
 import TaskColumn from "./TaskColumn";
-import {
-  closestCenter,
-  DragOverlay,
-  DndContext,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import TaskCard from "./TaskCard";
+import { useState } from "react";
+import AddTodo from "./AddTodo";
+import CloseIcon from "@mui/icons-material/Close";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../store/store";
+import { moveTask } from "../store/tasksSlice";
+import { DragOverlay } from "@dnd-kit/core";
+import type { DragStartEvent } from "@dnd-kit/core";
 
-type BoardState = {
-  tasksById: Record<number, Task>;
-  columns: Record<TaskStatus, number[]>;
-};
 
-const initialTasks: Task[] = [
-  {
-    id: 1,
-    status: "todo",
-    jobType: "Montaj",
-    customerName: "Ali",
-    phone: "05886889898",
-    address: {
-      city: "Antalya",
-      district: "Gazipaşa",
-      quarter: "Gazi mahallesi",
-      detail: "Bülent Ecevit Cad.",
-    },
-    process: "Klima montajı",
-    price: "4000",
-  },
-];
 
 const TaskBoard = () => {
-  const [activeId, setActiveId] = useState<number | null>(null);
-  const [board, setBoard] = useState<BoardState>(() => {
-    const tasksById: Record<number, Task> = {};
-    const columns: Record<TaskStatus, number[]> = {
-      todo: [],
-      "in-progress": [],
-      done: [],
-    };
+  const [activeId, setActiveId] = useState<string | null>(null);
 
-    for (const task of initialTasks) {
-      tasksById[task.id] = task;
-      columns[task.status].push(task.id);
-    }
+  const [openAdd, setOpenAdd] = useState(false);
+  const tasks = useSelector((state: RootState) => state.tasks);
 
-    return { tasksById, columns };
-  });
-
-  const [show, setShow] = useState(false);
-
-  const onAddClick = () => setShow(true);
-
-  const findContainer = (
-    id: string | number,
-    columns: BoardState["columns"]
-  ) => {
-    if (id === "todo" || id === "in-progress" || id === "done") return id;
-    const taskId = Number(id);
-    for (const key of Object.keys(columns) as TaskStatus[]) {
-      if (columns[key].includes(taskId)) return key;
-    }
-    return null;
+  const tasksByStatus = {
+    todo: tasks.filter((t) => t.status === "todo"),
+    inprogress: tasks.filter((t) => t.status === "inprogress"),
+    done: tasks.filter((t) => t.status === "done"),
   };
+  const dispatch = useDispatch();
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over) return;
+  const handleDragEnd = (event: DragEndEvent) => {
+  const { active, over } = event;
+  if (!over) return;
 
-    setBoard((prev) => {
-      const activeId = Number(active.id);
-      const overId = over.id;
+  const activeId = String(active.id);
+  const overId = String(over.id);
 
-      const activeContainer = findContainer(activeId, prev.columns);
-      const overContainer = findContainer(overId, prev.columns);
+  const activeTask = tasks.find((t) => t.id === activeId);
+  const overTask = tasks.find((t) => t.id === overId);
 
-      if (!activeContainer || !overContainer) return prev;
+  if (!activeTask) return;
 
-      // Aynı kolonda sıralama
-      if (activeContainer === overContainer) {
-        const items = prev.columns[activeContainer];
-        const oldIndex = items.indexOf(activeId);
+  const targetStatus = overTask
+    ? overTask.status
+    : (overId as "todo" | "inprogress" | "done");
 
-        // over bir kolon id'si ise (string) -> sona at
-        const newIndex =
-          typeof overId === "string"
-            ? items.length - 1
-            : items.indexOf(Number(overId));
+  const targetList = tasksByStatus[targetStatus];
+  const targetIndex = overTask
+    ? targetList.findIndex((t) => t.id === overId)
+    : targetList.length;
 
-        if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex)
-          return prev;
+  dispatch(
+    moveTask({
+      taskId: activeId,
+      targetStatus,
+      targetIndex,
+    })
+  );
+  setActiveId(null);
 
-        return {
-          ...prev,
-          columns: {
-            ...prev.columns,
-            [activeContainer]: arrayMove(items, oldIndex, newIndex),
-          },
-        };
-      }
+ 
 
-      // Kolonlar arası taşıma
-      const fromItems = prev.columns[activeContainer];
-      const toItems = prev.columns[overContainer];
-
-      const fromIndex = fromItems.indexOf(activeId);
-      if (fromIndex === -1) return prev;
-
-      const nextFrom = fromItems.filter((id) => id !== activeId);
-
-      // over bir kart ise: o kartın index'ine, kolonsa: sona
-      const toIndex =
-        typeof overId === "string"
-          ? toItems.length
-          : toItems.indexOf(Number(overId));
-
-      const insertIndex = toIndex === -1 ? toItems.length : toIndex;
-      const nextTo = [...toItems];
-      nextTo.splice(insertIndex, 0, activeId);
-
-      return {
-        tasksById: {
-          ...prev.tasksById,
-          [activeId]: { ...prev.tasksById[activeId], status: overContainer },
-        },
-        columns: {
-          ...prev.columns,
-          [activeContainer]: nextFrom,
-          [overContainer]: nextTo,
-        },
-      };
-    });
-  };
-
+};
+const handleDragStart = (event: DragStartEvent) => {
+  setActiveId(String(event.active.id));
+};
+const activeTask = tasks.find((t) => t.id === activeId);
   return (
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={({ active }) => setActiveId(Number(active.id))}
-      onDragCancel={() => setActiveId(null)}
-      onDragEnd={(e) => {
-        setActiveId(null);
-        handleDragEnd(e);
-      }}
-    >
-      <Box sx={{ height: "100%" }}>
-        <Box sx={{ display: "flex", gap: 2 }}>
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+      <Box>
+        <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
+          Task Board
+        </Typography>
+        <Box sx={{ display: "flex", flexDirection: "row" }}>
           <TaskColumn
-            title="Todo"
             status="todo"
-            taskIds={board.columns.todo}
-            tasksById={board.tasksById}
-            onAddClick={onAddClick}
+            boardtitle="Yapılacak"
+            addButton
+            onAddClick={() => setOpenAdd(true)}
           />
-          <TaskColumn
-            title="In Progress"
-            status="in-progress"
-            taskIds={board.columns["in-progress"]}
-            tasksById={board.tasksById}
-          />
-          <TaskColumn
-            title="Done"
-            status="done"
-            taskIds={board.columns.done}
-            tasksById={board.tasksById}
-          />
+          <TaskColumn boardtitle="Yapım Aşamasında" status="inprogress" />
+          <TaskColumn boardtitle="Yapıldı" status="done" />
         </Box>
-
-        {show && (
-          <AddTodo
-            onClose={() => setShow(false)}
-            onSave={(data) => {
-              const id = Date.now();
-              const newTask: Task = { id, status: "todo", ...data };
-
-              setBoard((prev) => ({
-                tasksById: { ...prev.tasksById, [id]: newTask },
-                columns: { ...prev.columns, todo: [...prev.columns.todo, id] },
-              }));
-              setShow(false);
+        <Modal open={openAdd} onClose={() => setOpenAdd(false)}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              p: 2,
+              borderRadius: 2,
+              minWidth: 800,
+              outline: "none",
             }}
-          />
-        )}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setOpenAdd(false)}
+              aria-label="close"
+              sx={{ position: "absolute", top: 2, right: 2 }}
+            >
+              <CloseIcon />
+            </IconButton>
+
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Typography variant="h4">{"İş Kayıt"}</Typography>
+            </Box>
+
+            <AddTodo onSuccess={() => setOpenAdd(false)} />
+          </Box>
+        </Modal>
       </Box>
       <DragOverlay>
-        {activeId != null ? (
-          <TaskCard task={board.tasksById[activeId]} />
-        ) : null}
-      </DragOverlay>
+  {activeTask ? (
+    <Box
+      sx={{
+        pointerEvents: "none",
+        p: 1,
+        bgcolor: "white",
+        borderRadius: 2,
+        boxShadow: 3,
+        minWidth: 250,
+      }}
+    >
+      <Typography fontWeight={700}>{`İş: ${activeTask.taskType}`}</Typography>
+      <Typography variant="body2">{`Müşteri: ${activeTask.customerName}`}</Typography>
+      <Typography variant="body2">
+            {`Adres: ${activeTask.address.city}/${activeTask.address.district} ${activeTask.address.quarter} mah. ${activeTask.address.detail}`}
+          </Typography>
+          <Typography variant="body2">
+            {`Yapılacak İşlem: ${activeTask.work}`}
+          </Typography>
+          <Typography variant="body2">
+            {`Servis Ücreti: ${activeTask.price} ₺`}
+          </Typography>
+    </Box>
+  ) : null}
+</DragOverlay>
     </DndContext>
   );
 };

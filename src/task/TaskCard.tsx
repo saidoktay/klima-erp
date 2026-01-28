@@ -1,58 +1,49 @@
-import { Paper, Typography } from "@mui/material";
-import { Box } from "@mui/system";
+import { Card, CardContent, Typography, Stack } from "@mui/material";
 import type { Task } from "../types/task";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useSortable } from "@dnd-kit/sortable"; 
+import { CSS } from "@dnd-kit/utilities"; 
 
-type TaskCardProps = {
-  task: Task;
-};
-
-const TaskCard = ({ task }: TaskCardProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+const TaskCard = ({ task }: { task: Task }) => {
+  const { attributes, listeners, setNodeRef, transform,transition, isDragging } = useSortable({
     id: task.id,
   });
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  transform: CSS.Transform.toString(transform),
+  transition: transition ?? "transform 200ms ease",
+  opacity: isDragging ? 0 : 1,
+  
+};
   return (
-    <Box
+    <Card
       ref={setNodeRef}
       style={style}
-      {...listeners}
       {...attributes}
-      sx={{ cursor: isDragging ? "grabbing" : "grab", touchAction: "none" }}
+      {...listeners}
+      elevation={1}
+      sx={{ borderRadius: 2, cursor: "pointer" }}
     >
-      <Paper elevation={1} sx={{ p: 1.5, mb: 1 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+      <CardContent sx={{ pb: "16px !important" }}>
+        <Stack spacing={0.5}>
+          <Typography fontWeight={700}>{`İş: ${task.taskType}`}</Typography>
+
           <Typography variant="body2">
-            {"İş"}: {task.jobType}
+            {`Müşteri Adı: ${task.customerName}`}
           </Typography>
           <Typography variant="body2">
-            {"Müşteri"}: {task.customerName}
-          </Typography>
-          <Typography variant="body2">Tel: {task.phone}</Typography>
-          <Typography variant="body2">
-            Adres: {task.address.city}/{task.address.district}{" "}
-            {task.address.quarter} {task.address.detail}
+            {`Müşteri Tel No: ${task.customerNumber}`}
           </Typography>
           <Typography variant="body2">
-            {"İşlem"}: {task.process}{" "}
+            {`Adres: ${task.address.city}/${task.address.district} ${task.address.quarter} mah. ${task.address.detail}`}
           </Typography>
           <Typography variant="body2">
-            {"Ücret"}: {task.price} TL
+            {`Yapılacak İşlem: ${task.work}`}
           </Typography>
-        </Box>
-      </Paper>
-    </Box>
+          <Typography variant="body2">
+            {`Servis Ücreti: ${task.price} ₺`}
+          </Typography>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 };
 
