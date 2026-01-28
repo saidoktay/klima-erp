@@ -1,93 +1,95 @@
 import {
-  Autocomplete,
+  Box,
   Button,
-  Paper,
+  Stack,
   TextField,
+  Autocomplete,
+  FormControl,
+  FormHelperText,
+  createFilterOptions,
   Typography,
 } from "@mui/material";
-import { Box } from "@mui/system";
 import { useState } from "react";
 import { Adress } from "../components/Adress";
+import { useDispatch } from "react-redux";
+import { addTask } from "../store/tasksSlice";
 
-type AddTodoFormData = {
-  jobType: string;
-  customerName: string;
-  phone: string;
-  address: {
-    city: string;
-    district: string;
-    quarter: string;
-    detail: string;
-  };
-  process: string;
-  price: string;
-};
+const taskTypes = ["Bakım", "Montaj", "Servis"];
+const customerNames = ["Erol Özdemir", "Bim", "Ahmet Çal"];
+const customerNumbers = [
+  "5325558979",
+  "5337886868",
+  "5538337373",
+  "5557858585",
+];
+const works = [
+  "Cihazların Bakımları yapılcak ve Gaz basılacak",
+  "Dış ünite balkona koyulacak",
+  "Sensör değiştirilecek",
+];
+const prices = ["15000", "5000", "8500", "25000", "150000"];
+const filter = createFilterOptions<string>();
 
-type AddTodoProps = {
-  onClose: () => void;
-  onSave: (data: AddTodoFormData) => void;
-};
-
-export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
-  const oldValues = ["Montaj", "Arıza", "Bakım"];
-  const [jobType, setJobType] = useState("");
+const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
+  const [taskType, setTaskType] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [phone, setPhone] = useState("");
-
+  const [customerNumber, setCustomerNumber] = useState("");
   const [address, setAddress] = useState({
     city: "",
     district: "",
     quarter: "",
     detail: "",
   });
-
-  const [process, setProcess] = useState("");
+  const [work, setWork] = useState("");
   const [price, setPrice] = useState("");
 
-  const handleSave = () => {
-    const formData = {
-      jobType,
-      customerName,
-      phone,
-      address,
-      process,
-      price,
-    };
-    onSave(formData);
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("İş Türü:", taskType, "Müşteri Adı:", customerName);
+    if (
+      errors.taskType ||
+      errors.customerName ||
+      errors.customerNumber ||
+      errors.price
+    ) {
+      return;
+    }
+
+    dispatch(
+      addTask({
+        taskType,
+        customerName,
+        customerNumber,
+        address,
+        work,
+        price,
+        status: "todo",
+      })
+    );
+    setTaskType("");
+    setCustomerName("");
+    setCustomerNumber("");
+    setAddress({ city: "", district: "", quarter: "", detail: "" });
+    setWork("");
+    setPrice("");
+    onSuccess?.();
   };
+
+  const errors = {
+    taskType: taskType.trim() === "",
+    customerName: customerName.trim() === "",
+    customerNumber: customerNumber.trim() === "",
+    price: price.trim() === "",
+  };
+  const dispatch = useDispatch();
 
   return (
     <Box
-      sx={{
-        position: "fixed",
-        top: "0px",
-        left: "240px",
-        right: "0px",
-        bottom: "0px",
-        backgroundColor: "rgba(0, 0, 0, 0.4)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: "1000",
-      }}
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{ p: 2, width: "1000px" }}
     >
-      <Paper
-        sx={{
-          width: "800px",
-          padding: "20px",
-          zIndex: "1100",
-          borderRadius: "30px",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            paddingBottom: "5px",
-          }}
-        >
-          <Typography variant="h4">{"İş Kayıt"}</Typography>
-        </Box>
+      <Stack spacing={2}>
         <Box
           sx={{
             display: "grid",
@@ -95,46 +97,69 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
             gap: "5px",
           }}
         >
-          <Autocomplete
-            freeSolo
-            options={oldValues}
-            value={jobType}
-            onInputChange={(_, newInputValue) => {
-              setJobType(newInputValue);
-            }}
-            renderInput={(params) => (
-              <TextField {...params} fullWidth label={"İş Türü:"} />
-            )}
-          />
-          <TextField
-            sx={{
-              "& .MuiInputBase-inputMultiline": {
-                lineHeight: "1.5",
-              },
-            }}
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            label={"Müşteri Adı:"}
-            multiline
-            fullWidth
-            minRows={1}
-          />
-          <TextField
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            label="Tel No:"
-          />
+          <FormControl fullWidth error={errors.taskType}>
+            <Autocomplete
+              freeSolo
+              options={taskTypes}
+              filterOptions={(opts, params) => {
+                const filtered = filter(opts, params);
+                return filtered.slice(0, 3);
+              }}
+              value={taskType}
+              onChange={(_, v) => setTaskType(v ?? "")}
+              onInputChange={(_, v) => setTaskType(v)}
+              renderInput={(params) => (
+                <TextField {...params} label="İş Türü" />
+              )}
+            />
+            {errors.taskType ? (
+              <FormHelperText>Zorunlu alan</FormHelperText>
+            ) : null}
+          </FormControl>
+          <FormControl fullWidth error={errors.customerName}>
+            <Autocomplete
+              freeSolo
+              options={customerNames}
+              filterOptions={(opts, params) => {
+                const filtered = filter(opts, params);
+                return filtered.slice(0, 3);
+              }}
+              value={customerName}
+              onChange={(_, v) => setCustomerName(v ?? "")}
+              onInputChange={(_, v) => setCustomerName(v)}
+              renderInput={(params) => (
+                <TextField {...params} label="Müşteri Adı" />
+              )}
+            />
+            {errors.customerName ? (
+              <FormHelperText>Zorunlu alan</FormHelperText>
+            ) : null}
+          </FormControl>
+          <FormControl fullWidth error={errors.customerNumber}>
+            <Autocomplete
+              freeSolo
+              options={customerNumbers}
+              filterOptions={(opts, params) => {
+                const filtered = filter(opts, params);
+                return filtered.slice(0, 3);
+              }}
+              value={customerNumber}
+              onChange={(_, v) => setCustomerNumber(v ?? "")}
+              onInputChange={(_, v) => setCustomerNumber(v)}
+              renderInput={(params) => (
+                <TextField type="number" {...params} label="Tel No" />
+              )}
+            />
+            {errors.customerNumber ? (
+              <FormHelperText>Zorunlu alan</FormHelperText>
+            ) : null}
+          </FormControl>
         </Box>
         <Box sx={{ mt: 1, mb: 1 }}>
           <Typography variant="h5">Adres</Typography>
         </Box>
-
         <Box>
-          <Adress
-            onChange={(addr) => {
-              setAddress(addr);
-            }}
-          />
+          <Adress address={address} onChange={setAddress} />
         </Box>
         <Box sx={{ padding: "5px", display: "flex", justifyContent: "center" }}>
           <Typography variant="h5">{"İşlem/Fiyat"}</Typography>
@@ -146,40 +171,46 @@ export const AddTodo = ({ onClose, onSave }: AddTodoProps) => {
             gap: "5px",
           }}
         >
-          <TextField
-            label={"Yapılacak İşlem"}
-            value={process}
-            onChange={(e) => setProcess(e.target.value)}
-            multiline
-            minRows={1}
-            fullWidth
-            placeholder={"Cihaz montajı yapılıp eski cihaz sökülecek"}
+          <Autocomplete
+            freeSolo
+            options={works}
+            filterOptions={(opts, params) => {
+              const filtered = filter(opts, params);
+              return filtered.slice(0, 2);
+            }}
+            value={work}
+            onChange={(_, v) => setWork(v ?? "")}
+            onInputChange={(_, v) => setWork(v)}
+            renderInput={(params) => (
+              <TextField {...params} label="İş Tanımı" />
+            )}
           />
-          <TextField
-            label={"Fiyat (₺)"}
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            type="number"
-            fullWidth
-          />
+          <FormControl fullWidth error={errors.price}>
+            <Autocomplete
+              freeSolo
+              options={prices}
+              filterOptions={(opts, params) => {
+                const filtered = filter(opts, params);
+                return filtered.slice(0, 3);
+              }}
+              value={price}
+              onChange={(_, v) => setPrice(v ?? "")}
+              onInputChange={(_, v) => setPrice(v)}
+              renderInput={(params) => (
+                <TextField type="number" {...params} label="Fiyat (₺)" />
+              )}
+            />
+            {errors.price ? (
+              <FormHelperText>Zorunlu alan</FormHelperText>
+            ) : null}
+          </FormControl>
         </Box>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: 2,
-            mt: 3,
-          }}
-        >
-          <Button variant="outlined" color="inherit" onClick={onClose}>
-            {"iptal"}
-          </Button>
-
-          <Button variant="contained" onClick={handleSave}>
-            Kaydet
-          </Button>
-        </Box>
-      </Paper>
+        <Button type="submit" variant="contained">
+          Kaydet
+        </Button>
+      </Stack>
     </Box>
   );
 };
+
+export default AddTodo;

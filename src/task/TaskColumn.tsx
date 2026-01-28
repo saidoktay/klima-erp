@@ -1,67 +1,79 @@
-import { Box, Typography, Paper, IconButton } from "@mui/material";
-import AddBoxIcon from "@mui/icons-material/AddBox";
-import type { Task, TaskStatus } from "../types/task";
+import { Container, Paper, Stack, Typography, IconButton } from "@mui/material";
 import TaskCard from "./TaskCard";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import AddIcon from "@mui/icons-material/Add";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
 import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 type TaskColumnProps = {
-  title: string;
-  status: TaskStatus;
-  taskIds: number[];
-  tasksById: Record<number, Task>;
+  boardtitle: string;
+  status: "todo" | "inprogress" | "done";
+  addButton?: boolean;
   onAddClick?: () => void;
 };
-
 const TaskColumn = ({
-  title,
+  boardtitle,
   status,
-  taskIds,
-  tasksById,
+  addButton,
   onAddClick,
 }: TaskColumnProps) => {
-  const { setNodeRef } = useDroppable({ id: status });
+  const tasks = useSelector((state: RootState) =>
+    state.tasks.filter((t) => t.status === status)
+  );
+  const { setNodeRef } = useDroppable({
+    id: status,
+  });
 
   return (
-    <Paper
-      ref={setNodeRef}
-      elevation={5}
-      sx={{
-        width: 300,
-        padding: 2,
-        backgroundColor: "#f9f9f9",
-        minHeight: 300,
-      }}
-    >
-      <Typography
-        variant="h6"
+    <Container ref={setNodeRef} maxWidth="lg" sx={{ py: 3 }}>
+      <Paper
         sx={{
-          width: "100%",
-          mb: 2,
+          height: "auto",
+          borderRadius: 3,
+          minHeight: 700,
+          p: 2,
+          backgroundColor: "#f9f9f9",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          flexDirection: "column",
+          boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px;",
         }}
       >
-        {title}
-        {status === "todo" && (
-          <IconButton onClick={onAddClick}>
-            <AddBoxIcon sx={{ color: "black" }} />
-          </IconButton>
-        )}
-      </Typography>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 2 }}
+        >
+          <Typography variant="h6" fontWeight={700}>
+            {boardtitle}
+          </Typography>
+          {addButton ? (
+            <IconButton onClick={onAddClick}>
+              <AddIcon
+                fontSize="small"
+                sx={{
+                  background: "black",
+                  color: "white",
+                  borderRadius: "3px",
+                }}
+              />
+            </IconButton>
+          ) : null}
+        </Stack>
 
-      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-        <Box sx={{ minHeight: 80 }}>
-          {taskIds.map((id) => (
-            <TaskCard key={id} task={tasksById[id]} />
-          ))}
-        </Box>
-      </SortableContext>
-    </Paper>
+         <SortableContext
+          items={tasks.map((t) => t.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <Stack spacing={1.5}>
+            {tasks.map((task) => (
+              <TaskCard key={task.id} task={task} />
+            ))}
+          </Stack>
+        </SortableContext>
+      </Paper>
+    </Container>
   );
 };
 

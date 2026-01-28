@@ -1,36 +1,20 @@
 import { Autocomplete, Box, TextField } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+
 import { cityValues, districtValues, quarterValues } from "../data/adressData";
 
-type AdressProps = {
-  onChange: (address: {
-    city: string;
-    district: string;
-    quarter: string;
-    detail: string;
-  }) => void;
+type Address = {
+  city: string;
+  district: string;
+  quarter: string;
+  detail: string;
 };
 
-export const Adress = ({ onChange }: AdressProps) => {
-  const [city, setCity] = useState("");
-  const [district, setDistrict] = useState("");
-  const [quarter, setQuarter] = useState("");
-  const [detail, setDetail] = useState("");
+type AdressProps = {
+  address: Address;
+  onChange: (next: Address) => void;
+};
 
-  const onChangeRef = useRef(onChange);
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-
-  useEffect(() => {
-    onChangeRef.current({
-      city,
-      district,
-      quarter,
-      detail,
-    });
-  }, [city, district, quarter, detail]);
-
+export const Adress = ({ address, onChange }: AdressProps) => {
   return (
     <Box
       sx={{
@@ -42,28 +26,28 @@ export const Adress = ({ onChange }: AdressProps) => {
       <Autocomplete
         freeSolo
         options={cityValues}
-        value={city}
-        onInputChange={(_, v) => setCity(v)}
+        value={address.city}
+        onInputChange={(_, v) => onChange({ ...address, city: v })}
         renderInput={(params) => <TextField {...params} label="İL" />}
       />
       <Autocomplete
         freeSolo
         options={districtValues}
-        value={district}
-        onInputChange={(_, v) => setDistrict(v)}
+        value={address.district}
+        onInputChange={(_, v) => onChange({ ...address, district: v })}
         renderInput={(params) => <TextField {...params} label="İLÇE" />}
       />
       <Autocomplete
         freeSolo
         options={quarterValues}
-        value={quarter}
-        onInputChange={(_, v) => setQuarter(v)}
+        value={address.quarter}
+        onInputChange={(_, v) => onChange({ ...address, quarter: v })}
         renderInput={(params) => <TextField {...params} label="Mahalle" />}
       />
       <TextField
         label={"Detaylı Adres"}
-        value={detail}
-        onChange={(e) => setDetail(e.target.value)}
+        value={address.detail}
+        onChange={(e) => onChange({ ...address, detail: e.target.value })}
         multiline
         minRows={1}
         placeholder="Sokak, apartman, no vb."
