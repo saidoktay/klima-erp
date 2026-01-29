@@ -1,4 +1,4 @@
-import TaskBoard from "../../task/TaskBoard";
+import TaskBoard from "./Task/TaskBoard";
 import "./Home.css";
 export const Home = () => {
   return <TaskBoard />;

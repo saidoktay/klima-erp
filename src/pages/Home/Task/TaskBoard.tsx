@@ -1,13 +1,13 @@
 import { Box, Typography, Modal, IconButton } from "@mui/material";
-import TaskColumn from "./TaskColumn";
+import TaskColumn from "../Task/TaskColumn";
 import { useState } from "react";
-import AddTodo from "./AddTodo";
+import AddTodo from "./AddTodo/AddTodo";
 import CloseIcon from "@mui/icons-material/Close";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import type { DragEndEvent } from "@dnd-kit/core";
 import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "../store/store";
-import { moveTask } from "../store/tasksSlice";
+import type { RootState } from "../../../store/store";
+import { moveTask } from "../../../store/tasksSlice";
 import { DragOverlay } from "@dnd-kit/core";
 import type { DragStartEvent } from "@dnd-kit/core";
 
@@ -66,8 +66,8 @@ const activeTask = tasks.find((t) => t.id === activeId);
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
       <Box>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
-          Task Board
+        <Typography variant="h5" fontWeight={700} sx={{ display:"flex",justifyContent:"center", }}>
+          İş Takip Sayfası
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "row" }}>
           <TaskColumn
