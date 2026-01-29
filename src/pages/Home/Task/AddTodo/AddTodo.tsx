@@ -10,9 +10,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { Adress } from "../components/Adress";
+import { Adress } from "./Adress/Adress";
 import { useDispatch } from "react-redux";
-import { addTask } from "../store/tasksSlice";
+import { addTask } from "../../../../store/tasksSlice";
 
 const taskTypes = ["Bakım", "Montaj", "Servis"];
 const customerNames = ["Erol Özdemir", "Bim", "Ahmet Çal"];

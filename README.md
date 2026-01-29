@@ -1,6 +1,6 @@
 # Klima ERP (Frontend)
 
-Demo Video: https://youtu.be/E0mS70UCeHc
+Demo Video: https://www.youtube.com/watch?v=_J30axrlqgs
 
 Klima servis/montaj işleri için basit bir iş takip arayüzü. React + TypeScript + Vite ile geliştirilmiştir.
 
@@ -10,6 +10,7 @@ Klima servis/montaj işleri için basit bir iş takip arayüzü. React + TypeScr
 - Ana layout + sidebar
 - İş takip panosu (Todo / In Progress / Done)
 - Yeni iş ekleme formu (müşteri, telefon, adres, işlem, ücret vb.)
+- Drag and Drop (DnD) ile iş durumlarının (Todo / In Progress / Done) yönetimi
 
 ## Teknolojiler
 

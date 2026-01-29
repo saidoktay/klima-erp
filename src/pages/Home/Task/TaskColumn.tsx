@@ -2,7 +2,7 @@ import { Container, Paper, Stack, Typography, IconButton } from "@mui/material";
 import TaskCard from "./TaskCard";
 import AddIcon from "@mui/icons-material/Add";
 import { useSelector } from "react-redux";
-import type { RootState } from "../store/store";
+import type { RootState } from "../../../store/store";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 

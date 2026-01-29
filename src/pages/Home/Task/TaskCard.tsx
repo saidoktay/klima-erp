@@ -1,5 +1,5 @@
 import { Card, CardContent, Typography, Stack } from "@mui/material";
-import type { Task } from "../types/task";
+import type { Task } from "../../../types/task";
 import { useSortable } from "@dnd-kit/sortable"; 
 import { CSS } from "@dnd-kit/utilities"; 
 

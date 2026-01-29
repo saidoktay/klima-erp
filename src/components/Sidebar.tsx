@@ -1,4 +1,6 @@
-import AddTaskIcon from "@mui/icons-material/AddTask";
+import ChecklistIcon from '@mui/icons-material/Checklist';
+
+import { PackageSearch as StockIcon} from 'lucide-react';
 import {
   Box,
   Drawer,
@@ -10,7 +12,7 @@ import {
   Toolbar,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import logo from "../image/logo/logo.png";
+import logo from "../image/Logo/logo.png";
 
 const drawerWidth = 240;
 
@@ -49,7 +51,7 @@ const Sidebar = () => {
             >
               <ListItemText primary="İş Takip" />
               <ListItemIcon>
-                <AddTaskIcon fontSize="large" />
+                <ChecklistIcon fontSize="large" />
               </ListItemIcon>
             </ListItemButton>
           </ListItem>
@@ -57,10 +59,13 @@ const Sidebar = () => {
           <ListItem disablePadding>
             <ListItemButton
               component={Link}
-              to="/profile"
-              selected={location.pathname === "/profile"}
+              to="/stock"
+              selected={location.pathname === "/stock"}
             >
-              <ListItemText primary="Profile" />
+              <ListItemText primary="Stok-Takip" />
+              <ListItemIcon>
+                <StockIcon size={30} />
+              </ListItemIcon>
             </ListItemButton>
           </ListItem>
         </List>
