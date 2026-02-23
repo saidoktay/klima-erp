@@ -13,39 +13,60 @@ import { useState } from "react";
 import { Adress } from "./Adress/Adress";
 import { useDispatch } from "react-redux";
 import { addTask } from "../../../../store/tasksSlice";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../../store/store";
+import { addOption } from "../../../../store/taskOptionsSlice";
+import StockDrop from "./StockDrop/StockDrop";
+import type { StockDropItem } from "../../../../types/task";
+import { addItem } from "../../../../store/stockSlice";
 
-const taskTypes = ["Bakım", "Montaj", "Servis"];
-const customerNames = ["Erol Özdemir", "Bim", "Ahmet Çal"];
-const customerNumbers = [
-  "5325558979",
-  "5337886868",
-  "5538337373",
-  "5557858585",
-];
-const works = [
-  "Cihazların Bakımları yapılcak ve Gaz basılacak",
-  "Dış ünite balkona koyulacak",
-  "Sensör değiştirilecek",
-];
-const prices = ["15000", "5000", "8500", "25000", "150000"];
 const filter = createFilterOptions<string>();
 
 const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
-  const [taskType, setTaskType] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerNumber, setCustomerNumber] = useState("");
-  const [address, setAddress] = useState({
-    city: "",
-    district: "",
-    quarter: "",
-    detail: "",
+  const [form, setForm] = useState({
+    taskType: "",
+    customerName: "",
+    customerNumber: "",
+    address: {
+      city: "",
+      district: "",
+      quarter: "",
+      detail: "",
+    },
+    work: "",
+    price: "",
+    stockDrops: [] as StockDropItem[],
   });
-  const [work, setWork] = useState("");
-  const [price, setPrice] = useState("");
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
+
+  const options = useSelector((state: RootState) => state.taskOptions);
+  const stocks = useSelector((state: RootState) => state.stock);
+
+  const updateField =
+    (
+      field: "taskType" | "customerName" | "customerNumber" | "work" | "price",
+    ) =>
+    (value: string) => {
+      setForm((p) => ({ ...p, [field]: value }));
+    };
+
+  const updateAddress = (address: typeof form.address) => {
+    setForm((p) => ({ ...p, address }));
+  };
+  const errors = {
+    taskType: form.taskType.trim() === "",
+    customerName: form.customerName.trim() === "",
+    customerNumber: form.customerNumber.trim() === "",
+    price: form.price.trim() === "",
+  };
+  const dispatch = useDispatch();
+  const handleAddStockDrop = (item: StockDropItem) => {
+    setForm((p) => ({ ...p, stockDrops: [...p.stockDrops, item] }));
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("İş Türü:", taskType, "Müşteri Adı:", customerName);
+
     if (
       errors.taskType ||
       errors.customerName ||
@@ -54,34 +75,51 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
     ) {
       return;
     }
+    dispatch(addOption({ key: "taskTypes", value: form.taskType }));
+    dispatch(addOption({ key: "customerNames", value: form.customerName }));
+    dispatch(addOption({ key: "customerNumbers", value: form.customerNumber }));
+    dispatch(addOption({ key: "works", value: form.work }));
+    dispatch(addOption({ key: "prices", value: form.price }));
 
     dispatch(
       addTask({
-        taskType,
-        customerName,
-        customerNumber,
-        address,
-        work,
-        price,
+        taskType: form.taskType,
+        customerName: form.customerName,
+        customerNumber: form.customerNumber,
+        address: form.address,
+        work: form.work,
+        price: form.price,
         status: "todo",
-      })
+        stockDrops: form.stockDrops,
+      }),
     );
-    setTaskType("");
-    setCustomerName("");
-    setCustomerNumber("");
-    setAddress({ city: "", district: "", quarter: "", detail: "" });
-    setWork("");
-    setPrice("");
+
+    
+    form.stockDrops.forEach((drop) => {
+      const stock = stocks.find((s) => s.id === drop.stockId);
+      if (!stock) return;
+
+      dispatch(
+        addItem({
+          type: stock.type,
+          mark: stock.mark,
+          model: stock.model,
+          stock: -drop.qty,
+        }),
+      );
+    });
+
+    setForm({
+      taskType: "",
+      customerName: "",
+      customerNumber: "",
+      address: { city: "", district: "", quarter: "", detail: "" },
+      work: "",
+      price: "",
+      stockDrops: [],
+    });
     onSuccess?.();
   };
-
-  const errors = {
-    taskType: taskType.trim() === "",
-    customerName: customerName.trim() === "",
-    customerNumber: customerNumber.trim() === "",
-    price: price.trim() === "",
-  };
-  const dispatch = useDispatch();
 
   return (
     <Box
@@ -100,14 +138,14 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
           <FormControl fullWidth error={errors.taskType}>
             <Autocomplete
               freeSolo
-              options={taskTypes}
+              options={options.taskTypes}
               filterOptions={(opts, params) => {
                 const filtered = filter(opts, params);
                 return filtered.slice(0, 3);
               }}
-              value={taskType}
-              onChange={(_, v) => setTaskType(v ?? "")}
-              onInputChange={(_, v) => setTaskType(v)}
+              value={form.taskType}
+              onChange={(_, v) => updateField("taskType")(v ?? "")}
+              onInputChange={(_, v) => updateField("taskType")(v)}
               renderInput={(params) => (
                 <TextField {...params} label="İş Türü" />
               )}
@@ -119,14 +157,14 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
           <FormControl fullWidth error={errors.customerName}>
             <Autocomplete
               freeSolo
-              options={customerNames}
+              options={options.customerNames}
               filterOptions={(opts, params) => {
                 const filtered = filter(opts, params);
                 return filtered.slice(0, 3);
               }}
-              value={customerName}
-              onChange={(_, v) => setCustomerName(v ?? "")}
-              onInputChange={(_, v) => setCustomerName(v)}
+              value={form.customerName}
+              onChange={(_, v) => updateField("customerName")(v ?? "")}
+              onInputChange={(_, v) => updateField("customerName")(v)}
               renderInput={(params) => (
                 <TextField {...params} label="Müşteri Adı" />
               )}
@@ -138,14 +176,14 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
           <FormControl fullWidth error={errors.customerNumber}>
             <Autocomplete
               freeSolo
-              options={customerNumbers}
+              options={options.customerNumbers}
               filterOptions={(opts, params) => {
                 const filtered = filter(opts, params);
                 return filtered.slice(0, 3);
               }}
-              value={customerNumber}
-              onChange={(_, v) => setCustomerNumber(v ?? "")}
-              onInputChange={(_, v) => setCustomerNumber(v)}
+              value={form.customerNumber}
+              onChange={(_, v) => updateField("customerNumber")(v ?? "")}
+              onInputChange={(_, v) => updateField("customerNumber")(v)}
               renderInput={(params) => (
                 <TextField type="number" {...params} label="Tel No" />
               )}
@@ -159,7 +197,7 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
           <Typography variant="h5">Adres</Typography>
         </Box>
         <Box>
-          <Adress address={address} onChange={setAddress} />
+          <Adress address={form.address} onChange={updateAddress} />
         </Box>
         <Box sx={{ padding: "5px", display: "flex", justifyContent: "center" }}>
           <Typography variant="h5">{"İşlem/Fiyat"}</Typography>
@@ -167,35 +205,44 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "3fr 1fr",
+            gridTemplateColumns: "3fr 1fr 1fr",
             gap: "5px",
           }}
         >
           <Autocomplete
             freeSolo
-            options={works}
+            options={options.works}
             filterOptions={(opts, params) => {
               const filtered = filter(opts, params);
               return filtered.slice(0, 2);
             }}
-            value={work}
-            onChange={(_, v) => setWork(v ?? "")}
-            onInputChange={(_, v) => setWork(v)}
+            value={form.work}
+            onChange={(_, v) => updateField("work")(v ?? "")}
+            onInputChange={(_, v) => updateField("work")(v)}
             renderInput={(params) => (
               <TextField {...params} label="İş Tanımı" />
             )}
           />
+          <Button
+            type="button"
+            variant="outlined"
+            fullWidth
+            sx={{ height: 56 }}
+            onClick={() => setStockDialogOpen(true)}
+          >
+            Stok Düş
+          </Button>
           <FormControl fullWidth error={errors.price}>
             <Autocomplete
               freeSolo
-              options={prices}
+              options={options.prices}
               filterOptions={(opts, params) => {
                 const filtered = filter(opts, params);
                 return filtered.slice(0, 3);
               }}
-              value={price}
-              onChange={(_, v) => setPrice(v ?? "")}
-              onInputChange={(_, v) => setPrice(v)}
+              value={form.price}
+              onChange={(_, v) => updateField("price")(v ?? "")}
+              onInputChange={(_, v) => updateField("price")(v)}
               renderInput={(params) => (
                 <TextField type="number" {...params} label="Fiyat (₺)" />
               )}
@@ -205,6 +252,12 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
             ) : null}
           </FormControl>
         </Box>
+        <StockDrop
+          open={stockDialogOpen}
+          onClose={() => setStockDialogOpen(false)}
+          onStockDrop={handleAddStockDrop}
+        />
+
         <Button type="submit" variant="contained">
           Kaydet
         </Button>

@@ -67,17 +67,14 @@ const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
 
   const handleChange =
     (field: keyof StockForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value =
-        field === "stock" || field === "minStock"
-          ? Number(e.target.value)
-          : e.target.value;
+      const value = field === "stock" ? Number(e.target.value) : e.target.value;
 
       setForm((prev) => ({ ...prev, [field]: value }));
     };
   const handleSubmit = () => {
     if (!form.mark || !form.model || !form.type || form.stock <= 0) {
-    return;
-  }
+      return;
+    }
     onSubmit(form);
   };
 
@@ -91,23 +88,24 @@ const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{display:"flex",justifyContent:"center"}}>Ürün Ekle / Çıkar</DialogTitle>
+      <DialogTitle sx={{ display: "flex", justifyContent: "center" }}>
+        Ürün Ekle / Çıkar
+      </DialogTitle>
       <TextField
-          select
-          label="İşlem"
-          value={form.mode}
-          onChange={(e) =>
-            setForm((p) => ({ ...p, mode: e.target.value as "add" | "remove" }))
-          }
-          fullWidth
-          SelectProps={{ native: true }}
-          sx={{padding:"2px"}}
-        >
-          <option value="add">Ekle</option>
-          <option value="remove">Çıkar</option>
-        </TextField>
+        select
+        label="İşlem"
+        value={form.mode}
+        onChange={(e) =>
+          setForm((p) => ({ ...p, mode: e.target.value as "add" | "remove" }))
+        }
+        fullWidth
+        SelectProps={{ native: true }}
+        sx={{ padding: "2px" }}
+      >
+        <option value="add">Ekle</option>
+        <option value="remove">Çıkar</option>
+      </TextField>
       <DialogContent>
-        
         <Box sx={{ display: "grid", gap: 2, mt: 1 }}>
           <Autocomplete
             freeSolo

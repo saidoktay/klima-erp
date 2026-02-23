@@ -3,7 +3,6 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Task } from "../types/task";
 import { arrayMove } from "@dnd-kit/sortable";
 
-
 const STATUS_ORDER = ["todo", "inprogress", "done"] as const;
 type AddTaskPayload = Omit<Task, "id">;
 
@@ -21,20 +20,24 @@ const tasksSlice = createSlice({
     },
     updateTaskStatus(
       state,
-      action: PayloadAction<{ taskId: string; newStatus: Task["status"] }>
+      action: PayloadAction<{ taskId: string; newStatus: Task["status"] }>,
     ) {
       const task = state.find((t) => t.id === action.payload.taskId);
       if (task) {
         task.status = action.payload.newStatus;
       }
     },
+    deleteTask(state, action: PayloadAction<string>) {
+      return state.filter((t) => t.id !== action.payload);
+    },
+
     moveTask(
       state,
       action: PayloadAction<{
         taskId: string;
         targetStatus: Task["status"];
         targetIndex: number;
-      }>
+      }>,
     ) {
       const { taskId, targetStatus, targetIndex } = action.payload;
 
@@ -56,7 +59,7 @@ const tasksSlice = createSlice({
 
         const clampedIndex = Math.min(
           Math.max(targetIndex, 0),
-          list.length - 1
+          list.length - 1,
         );
 
         if (oldIndex === clampedIndex) return state;
@@ -69,12 +72,9 @@ const tasksSlice = createSlice({
         if (movingIndex === -1) return state;
 
         const [movingTask] = listFrom.splice(movingIndex, 1);
-const movedTask = { ...movingTask, status: targetStatus };
+        const movedTask = { ...movingTask, status: targetStatus };
 
-        const clampedIndex = Math.min(
-          Math.max(targetIndex, 0),
-          listTo.length
-        );
+        const clampedIndex = Math.min(Math.max(targetIndex, 0), listTo.length);
         listTo.splice(clampedIndex, 0, movedTask);
       }
 
@@ -83,5 +83,5 @@ const movedTask = { ...movingTask, status: targetStatus };
   },
 });
 
-export const { addTask, updateTaskStatus,moveTask } = tasksSlice.actions;
+export const { addTask, updateTaskStatus, moveTask, deleteTask } = tasksSlice.actions;
 export default tasksSlice.reducer;
