@@ -1,3 +1,11 @@
+export type StockDropItem = {
+  stockId: string;
+  type: string;
+  mark: string;
+  model: string;
+  qty: number;
+};
+
 export type Task = {
   id: string;
   status: "todo" | "inprogress" | "done";
@@ -12,4 +20,8 @@ export type Task = {
   };
   work: string;
   price: string;
+  stockDrops: StockDropItem[];
+
+  
+  
 };
