@@ -1,6 +1,8 @@
-import ChecklistIcon from '@mui/icons-material/Checklist';
+import TaskIcon from '@mui/icons-material/Checklist';
+
 
 import { PackageSearch as StockIcon} from 'lucide-react';
+import { Notebook as DeptIcon } from 'lucide-react';
 import {
   Box,
   Drawer,
@@ -49,9 +51,9 @@ const Sidebar = () => {
               to="/home"
               selected={location.pathname === "/home"}
             >
-              <ListItemText primary="İş Takip" />
+              <ListItemText primary="İş-Takip" />
               <ListItemIcon>
-                <ChecklistIcon fontSize="large" />
+                <TaskIcon fontSize="large" />
               </ListItemIcon>
             </ListItemButton>
           </ListItem>
@@ -65,6 +67,19 @@ const Sidebar = () => {
               <ListItemText primary="Stok-Takip" />
               <ListItemIcon>
                 <StockIcon size={30} />
+              </ListItemIcon>
+            </ListItemButton>
+          </ListItem>
+
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/dept"
+              selected={location.pathname === "/dept"}
+            >
+              <ListItemText primary="Veresiye-Takip" />
+              <ListItemIcon>
+                <DeptIcon size={30} />
               </ListItemIcon>
             </ListItemButton>
           </ListItem>
