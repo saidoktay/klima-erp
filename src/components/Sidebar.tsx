@@ -13,7 +13,7 @@ import {
   Toolbar,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import logo from "../image/Logo/logo.png";
+import logo from "../image/logo/logo.png";
 import { Users as PersonnelIcon } from "lucide-react";
 
 const drawerWidth = 240;
