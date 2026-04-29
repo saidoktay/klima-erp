@@ -3,7 +3,7 @@ import tasksReducer from "./tasksSlice";
 import stockReducer from "./stockSlice";
 import taskOptionsReducer from "./taskOptionsSlice";
 import creditReducer from "./creditSlice";
-
+import personnelReducer from "./personnelSlice";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +11,7 @@ export const store = configureStore({
     stock:stockReducer,
     taskOptions: taskOptionsReducer,
     credit: creditReducer,
+    personnel: personnelReducer,
 
   },
 });

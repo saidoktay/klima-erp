@@ -11,13 +11,12 @@ import { moveTask } from "../../../store/tasksSlice";
 import { DragOverlay } from "@dnd-kit/core";
 import type { DragStartEvent } from "@dnd-kit/core";
 
-
-
 const TaskBoard = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const [openAdd, setOpenAdd] = useState(false);
   const tasks = useSelector((state: RootState) => state.tasks);
+  const personnel = useSelector((state: RootState) => state.personnel);
 
   const tasksByStatus = {
     todo: tasks.filter((t) => t.status === "todo"),
@@ -27,46 +26,55 @@ const TaskBoard = () => {
   const dispatch = useDispatch();
 
   const handleDragEnd = (event: DragEndEvent) => {
-  const { active, over } = event;
-  if (!over) return;
+    const { active, over } = event;
+    if (!over) return;
 
-  const activeId = String(active.id);
-  const overId = String(over.id);
+    const activeId = String(active.id);
+    const overId = String(over.id);
 
+    const activeTask = tasks.find((t) => t.id === activeId);
+
+    const overTask = tasks.find((t) => t.id === overId);
+
+    if (!activeTask) return;
+
+    const targetStatus = overTask
+      ? overTask.status
+      : (overId as "todo" | "inprogress" | "done");
+
+    const targetList = tasksByStatus[targetStatus];
+    const targetIndex = overTask
+      ? targetList.findIndex((t) => t.id === overId)
+      : targetList.length;
+
+    dispatch(
+      moveTask({
+        taskId: activeId,
+        targetStatus,
+        targetIndex,
+      }),
+    );
+    setActiveId(null);
+  };
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
+  };
   const activeTask = tasks.find((t) => t.id === activeId);
-  const overTask = tasks.find((t) => t.id === overId);
-
-  if (!activeTask) return;
-
-  const targetStatus = overTask
-    ? overTask.status
-    : (overId as "todo" | "inprogress" | "done");
-
-  const targetList = tasksByStatus[targetStatus];
-  const targetIndex = overTask
-    ? targetList.findIndex((t) => t.id === overId)
-    : targetList.length;
-
-  dispatch(
-    moveTask({
-      taskId: activeId,
-      targetStatus,
-      targetIndex,
-    })
+  const activeAssignedPersonnel = personnel.find(
+    (p) => p.id === activeTask?.assignedPersonnelId,
   );
-  setActiveId(null);
-
- 
-
-};
-const handleDragStart = (event: DragStartEvent) => {
-  setActiveId(String(event.active.id));
-};
-const activeTask = tasks.find((t) => t.id === activeId);
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      collisionDetection={closestCenter}
+    >
       <Box>
-        <Typography variant="h5" fontWeight={700} sx={{ display:"flex",justifyContent:"center", }}>
+        <Typography
+          variant="h5"
+          fontWeight={700}
+          sx={{ display: "flex", justifyContent: "center" }}
+        >
           İş Takip Sayfası
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "row" }}>
@@ -111,31 +119,37 @@ const activeTask = tasks.find((t) => t.id === activeId);
         </Modal>
       </Box>
       <DragOverlay>
-  {activeTask ? (
-    <Box
-      sx={{
-        pointerEvents: "none",
-        p: 1,
-        bgcolor: "white",
-        borderRadius: 2,
-        boxShadow: 3,
-        minWidth: 250,
-      }}
-    >
-      <Typography fontWeight={700}>{`İş: ${activeTask.taskType}`}</Typography>
-      <Typography variant="body2">{`Müşteri: ${activeTask.customerName}`}</Typography>
-      <Typography variant="body2">
-            {`Adres: ${activeTask.address.city}/${activeTask.address.district} ${activeTask.address.quarter} mah. ${activeTask.address.detail}`}
-          </Typography>
-          <Typography variant="body2">
-            {`Yapılacak İşlem: ${activeTask.work}`}
-          </Typography>
-          <Typography variant="body2">
-            {`Servis Ücreti: ${activeTask.price} ₺`}
-          </Typography>
-    </Box>
-  ) : null}
-</DragOverlay>
+        {activeTask ? (
+          <Box
+            sx={{
+              pointerEvents: "none",
+              p: 1,
+              bgcolor: "white",
+              borderRadius: 2,
+              boxShadow: 3,
+              minWidth: 250,
+            }}
+          >
+            <Typography
+              fontWeight={700}
+            >{`İş: ${activeTask.taskType}`}</Typography>
+            <Typography variant="body2">{`Müşteri: ${activeTask.customerName}`}</Typography>
+            <Typography variant="body2">
+              {`Personel: ${activeAssignedPersonnel?.name ?? "Atanmamış"}`}
+            </Typography>
+
+            <Typography variant="body2">
+              {`Adres: ${activeTask.address.city}/${activeTask.address.district} ${activeTask.address.quarter} mah. ${activeTask.address.detail}`}
+            </Typography>
+            <Typography variant="body2">
+              {`Yapılacak İşlem: ${activeTask.work}`}
+            </Typography>
+            <Typography variant="body2">
+              {`Servis Ücreti: ${activeTask.price} ₺`}
+            </Typography>
+          </Box>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 };

@@ -1,8 +1,7 @@
-import TaskIcon from '@mui/icons-material/Checklist';
+import TaskIcon from "@mui/icons-material/Checklist";
 
-
-import { PackageSearch as StockIcon} from 'lucide-react';
-import { Notebook as DeptIcon } from 'lucide-react';
+import { PackageSearch as StockIcon } from "lucide-react";
+import { Notebook as DeptIcon } from "lucide-react";
 import {
   Box,
   Drawer,
@@ -15,6 +14,7 @@ import {
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../image/Logo/logo.png";
+import { Users as PersonnelIcon } from "lucide-react";
 
 const drawerWidth = 240;
 
@@ -80,6 +80,18 @@ const Sidebar = () => {
               <ListItemText primary="Veresiye-Takip" />
               <ListItemIcon>
                 <DeptIcon size={30} />
+              </ListItemIcon>
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/personnel"
+              selected={location.pathname === "/personnel"}
+            >
+              <ListItemText primary="Personel" />
+              <ListItemIcon>
+                <PersonnelIcon size={30} />
               </ListItemIcon>
             </ListItemButton>
           </ListItem>

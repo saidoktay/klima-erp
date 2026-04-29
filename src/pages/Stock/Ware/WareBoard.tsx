@@ -11,18 +11,29 @@ import {
   TableRow,
   Paper,
   Chip,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useState } from "react";
 import AddStock from "./AddStock/AddStock";
+import EditStock from "./EditStock/EditStock";
 import { useDispatch } from "react-redux";
-import { addItem, removeItem } from "../../../store/stockSlice";
+import { addItem, updateItem, removeItem } from "../../../store/stockSlice";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store/store";
 
 const WareBoard = () => {
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedStockId, setSelectedStockId] = useState<string | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
   const dispatch = useDispatch();
   const stocks = useSelector((state: RootState) => state.stock);
+  const selectedStock =
+    stocks.find((item) => item.id === selectedStockId) ?? null;
+
   return (
     <Box sx={{ width: "100%" }}>
       <Typography
@@ -50,20 +61,56 @@ const WareBoard = () => {
             }}
             onClick={() => setOpen(true)}
           >
-            Ürün Ekle / Çıkar
+            Ürün Ekle
           </Button>
         </Box>
         <AddStock
           open={open}
           onClose={() => setOpen(false)}
           onSubmit={(data) => {
-            const payload =
-              data.mode === "remove" ? { ...data, stock: -data.stock } : data;
-
-            dispatch(addItem(payload));
+            dispatch(addItem(data));
+            setSnackbarMessage(
+              `${data.mark} ${data.model} ürünü stoğa eklendi. Stok: ${data.stock}`,
+            );
+            setSnackbarOpen(true);
             setOpen(false);
           }}
         />
+        <EditStock
+          open={editOpen}
+          onClose={() => {
+            setEditOpen(false);
+            setSelectedStockId(null);
+          }}
+          stock={selectedStock}
+          onSubmit={(data) => {
+            if (!selectedStock) return;
+
+            const stockChanged = data.stock !== selectedStock.stock;
+            const minStockChanged = data.minStock !== selectedStock.minStock;
+
+            let message = "";
+
+            if (stockChanged && minStockChanged) {
+              message = `${data.mark} ${data.model} için stok ve minimum stok güncellendi. Yeni stok: ${data.stock}`;
+            } else if (stockChanged) {
+              message = `${data.mark} ${data.model} stoğu güncellendi. Yeni stok: ${data.stock}`;
+            } else if (minStockChanged) {
+              message = `${data.mark} ${data.model} minimum stok değeri güncellendi.`;
+            }
+
+            dispatch(updateItem(data));
+
+            if (message) {
+              setSnackbarMessage(message);
+              setSnackbarOpen(true);
+            }
+
+            setEditOpen(false);
+            setSelectedStockId(null);
+          }}
+        />
+
         <Box>
           <TableContainer
             component={Paper}
@@ -107,10 +154,15 @@ const WareBoard = () => {
                 {stocks.map((item) => (
                   <TableRow
                     key={item.id}
+                    hover
+                    onClick={() => {
+                      setSelectedStockId(item.id);
+                      setEditOpen(true);
+                    }}
                     sx={{
-    "& tr": { backgroundColor: "#FFFFFF" },
-    "& tr:hover": { backgroundColor: "#F5F7FA" },
-  }}
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "#F5F7FA" },
+                    }}
                   >
                     <TableCell>{item.type}</TableCell>
                     <TableCell>{item.mark}</TableCell>
@@ -144,7 +196,9 @@ const WareBoard = () => {
                         variant="contained"
                         color="error"
                         size="small"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
+
                           if (window.confirm("Silmek istediğine emin misin?")) {
                             dispatch(removeItem(item.id));
                           }
@@ -159,6 +213,21 @@ const WareBoard = () => {
             </Table>
           </TableContainer>
         </Box>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity="success"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );
