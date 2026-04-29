@@ -4,7 +4,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IconButton } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../../../store/store";
 import { deleteTask } from "../../../store/tasksSlice";
 
 const TaskCard = ({ task }: { task: Task }) => {
@@ -25,6 +26,10 @@ const TaskCard = ({ task }: { task: Task }) => {
   };
 
   const dispatch = useDispatch();
+  const personnel = useSelector((state: RootState) => state.personnel);
+  const assignedPersonnel = personnel.find(
+    (p) => p.id === task.assignedPersonnelId,
+  );
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -53,6 +58,9 @@ const TaskCard = ({ task }: { task: Task }) => {
           </Typography>
           <Typography variant="body2">
             {`Müşteri Tel No: ${task.customerNumber}`}
+          </Typography>
+          <Typography variant="body2">
+            {`Personel: ${assignedPersonnel?.name ?? "Atanmamış"}`}
           </Typography>
           <Typography variant="body2">
             {`Adres: ${task.address.city}/${task.address.district} ${task.address.quarter} mah. ${task.address.detail}`}

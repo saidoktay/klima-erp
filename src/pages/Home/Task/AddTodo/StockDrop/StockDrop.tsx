@@ -7,6 +7,7 @@ import {
   Box,
   TextField,
   Autocomplete,
+  Alert,
 } from "@mui/material";
 import type { StockDropItem } from "../../../../../types/task";
 import { useSelector } from "react-redux";
@@ -40,6 +41,18 @@ const StockDrop = ({ open, onClose, onStockDrop }: StockDropProps) => {
         .map((s) => s.model),
     ),
   );
+  const matchingStocks = stocks.filter(
+    (s) => s.type === type && s.mark === mark && s.model === model,
+  );
+
+  const hasDuplicateStock = matchingStocks.length > 1;
+  const resetForm = () => {
+    setType("");
+    setMark("");
+    setModel("");
+    setQty(0);
+  };
+
   const onAddStockDrop = () => {
     if (!type || !mark || !model || qty <= 0) return;
 
@@ -56,15 +69,18 @@ const StockDrop = ({ open, onClose, onStockDrop }: StockDropProps) => {
       qty,
     });
 
-    setType("");
-    setMark("");
-    setModel("");
-    setQty(0);
+    resetForm();
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onClose={() => {
+        resetForm();
+        onClose();
+      }}
+    >
       <DialogTitle>Stok Düşme</DialogTitle>
       <DialogContent>
         <Box sx={{ display: "grid", gap: 2, mt: 1 }}>
@@ -114,11 +130,25 @@ const StockDrop = ({ open, onClose, onStockDrop }: StockDropProps) => {
             onChange={(e) => setQty(Number(e.target.value || 0))}
             fullWidth
           />
+          {hasDuplicateStock && (
+            <Alert severity="warning">
+              Bu modelden birden fazla kayıt var. Stok düşme işlemi ilk bulunan
+              kayıt üzerinden yapılacaktır.
+            </Alert>
+          )}
         </Box>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>İptal</Button>
+        <Button
+          onClick={() => {
+            resetForm();
+            onClose();
+          }}
+        >
+          İptal
+        </Button>
+
         <Button variant="contained" onClick={onAddStockDrop}>
           Düşür
         </Button>

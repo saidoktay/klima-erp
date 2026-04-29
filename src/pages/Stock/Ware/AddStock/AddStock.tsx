@@ -8,17 +8,19 @@ import {
   Button,
   Box,
   Autocomplete,
+  Alert,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../../store/store";
 
 type StockForm = {
-  mode: "add" | "remove";
   mark: string;
   model: string;
   type: string;
   stock: number;
   minStock?: number;
+  purchasePrice: number;
+  purchaseDate: string;
 };
 
 type AddStockProps = {
@@ -29,9 +31,11 @@ type AddStockProps = {
 
 const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
   const stocks = useSelector((state: RootState) => state.stock);
+  const today = new Date().toISOString().slice(0, 10);
 
   const [form, setForm] = useState<StockForm>({
-    mode: "add",
+    purchasePrice: 0,
+    purchaseDate: today,
     mark: "",
     model: "",
     type: "",
@@ -42,7 +46,8 @@ const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
   useEffect(() => {
     if (open) {
       setForm({
-        mode: "add",
+        purchasePrice: 0,
+        purchaseDate: today,
         mark: "",
         model: "",
         type: "",
@@ -64,15 +69,32 @@ const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
         .map((s) => s.model),
     ),
   );
+  const duplicateStock = stocks.find(
+    (item) =>
+      item.type === form.type &&
+      item.mark === form.mark &&
+      item.model === form.model,
+  );
 
   const handleChange =
     (field: keyof StockForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = field === "stock" ? Number(e.target.value) : e.target.value;
+      const value =
+        field === "stock" || field === "purchasePrice"
+          ? Number(e.target.value)
+          : e.target.value;
 
       setForm((prev) => ({ ...prev, [field]: value }));
     };
+
   const handleSubmit = () => {
-    if (!form.mark || !form.model || !form.type || form.stock <= 0) {
+    if (
+      !form.mark ||
+      !form.model ||
+      !form.type ||
+      form.stock <= 0 ||
+      form.purchasePrice <= 0 ||
+      !form.purchaseDate
+    ) {
       return;
     }
     onSubmit(form);
@@ -89,22 +111,9 @@ const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ display: "flex", justifyContent: "center" }}>
-        Ürün Ekle / Çıkar
+        Ürün Ekle
       </DialogTitle>
-      <TextField
-        select
-        label="İşlem"
-        value={form.mode}
-        onChange={(e) =>
-          setForm((p) => ({ ...p, mode: e.target.value as "add" | "remove" }))
-        }
-        fullWidth
-        SelectProps={{ native: true }}
-        sx={{ padding: "2px" }}
-      >
-        <option value="add">Ekle</option>
-        <option value="remove">Çıkar</option>
-      </TextField>
+
       <DialogContent>
         <Box sx={{ display: "grid", gap: 2, mt: 1 }}>
           <Autocomplete
@@ -148,6 +157,23 @@ const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
             fullWidth
           />
           <TextField
+            label="Alış Fiyatı (TL)"
+            type="number"
+            value={form.purchasePrice}
+            onChange={handleChange("purchasePrice")}
+            fullWidth
+          />
+
+          <TextField
+            label="Alış Tarihi"
+            type="date"
+            value={form.purchaseDate}
+            onChange={handleChange("purchaseDate")}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <TextField
             label="Minimum Adet"
             type="number"
             value={form.minStock ?? ""}
@@ -160,6 +186,12 @@ const AddStock = ({ open, onClose, onSubmit }: AddStockProps) => {
             }
             fullWidth
           />
+          {duplicateStock && (
+            <Alert severity="warning">
+              Bu ürün zaten listede var. Kaydedersen ayrı bir kayıt olarak
+              eklenecek.
+            </Alert>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>

@@ -20,6 +20,7 @@ export type Task = {
   };
   work: string;
   price: string;
+  assignedPersonnelId: string;
   stockDrops: StockDropItem[];
 
   

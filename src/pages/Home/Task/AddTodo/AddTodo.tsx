@@ -18,7 +18,7 @@ import type { RootState } from "../../../../store/store";
 import { addOption } from "../../../../store/taskOptionsSlice";
 import StockDrop from "./StockDrop/StockDrop";
 import type { StockDropItem } from "../../../../types/task";
-import { addItem } from "../../../../store/stockSlice";
+import { dropStock } from "../../../../store/stockSlice";
 
 const filter = createFilterOptions<string>();
 
@@ -35,16 +35,24 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
     },
     work: "",
     price: "",
+    assignedPersonnelId: "",
     stockDrops: [] as StockDropItem[],
   });
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
 
   const options = useSelector((state: RootState) => state.taskOptions);
-  const stocks = useSelector((state: RootState) => state.stock);
+  const personnel = useSelector((state: RootState) => state.personnel);
+  const activePersonnel = personnel.filter((p) => p.active);
 
   const updateField =
     (
-      field: "taskType" | "customerName" | "customerNumber" | "work" | "price",
+      field:
+        | "taskType"
+        | "customerName"
+        | "customerNumber"
+        | "work"
+        | "price"
+        | "assignedPersonnelId",
     ) =>
     (value: string) => {
       setForm((p) => ({ ...p, [field]: value }));
@@ -58,6 +66,7 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
     customerName: form.customerName.trim() === "",
     customerNumber: form.customerNumber.trim() === "",
     price: form.price.trim() === "",
+    assignedPersonnelId: form.assignedPersonnelId.trim() === "",
   };
   const dispatch = useDispatch();
   const handleAddStockDrop = (item: StockDropItem) => {
@@ -71,7 +80,8 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
       errors.taskType ||
       errors.customerName ||
       errors.customerNumber ||
-      errors.price
+      errors.price ||
+      errors.assignedPersonnelId
     ) {
       return;
     }
@@ -89,22 +99,17 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
         address: form.address,
         work: form.work,
         price: form.price,
+        assignedPersonnelId: form.assignedPersonnelId,
         status: "todo",
         stockDrops: form.stockDrops,
       }),
     );
 
-    
     form.stockDrops.forEach((drop) => {
-      const stock = stocks.find((s) => s.id === drop.stockId);
-      if (!stock) return;
-
       dispatch(
-        addItem({
-          type: stock.type,
-          mark: stock.mark,
-          model: stock.model,
-          stock: -drop.qty,
+        dropStock({
+          id: drop.stockId,
+          amount: drop.qty,
         }),
       );
     });
@@ -116,6 +121,7 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
       address: { city: "", district: "", quarter: "", detail: "" },
       work: "",
       price: "",
+      assignedPersonnelId: "",
       stockDrops: [],
     });
     onSuccess?.();
@@ -205,7 +211,7 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "3fr 1fr 1fr",
+            gridTemplateColumns: "3fr 1fr 1.5fr 1fr",
             gap: "5px",
           }}
         >
@@ -223,6 +229,27 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
               <TextField {...params} label="İş Tanımı" />
             )}
           />
+          <FormControl fullWidth error={errors.assignedPersonnelId}>
+            <Autocomplete
+              options={activePersonnel}
+              getOptionLabel={(option) => option.name}
+              value={
+                activePersonnel.find(
+                  (p) => p.id === form.assignedPersonnelId,
+                ) ?? null
+              }
+              onChange={(_, value) =>
+                updateField("assignedPersonnelId")(value?.id ?? "")
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Personel" />
+              )}
+            />
+            {errors.assignedPersonnelId ? (
+              <FormHelperText>Zorunlu alan</FormHelperText>
+            ) : null}
+          </FormControl>
+
           <Button
             type="button"
             variant="outlined"

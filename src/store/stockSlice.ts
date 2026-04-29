@@ -8,6 +8,13 @@ type StockItem = {
   type: string;
   stock: number;
   minStock: number;
+  purchaseHistory: PurchaseRecord[];
+};
+type PurchaseRecord = {
+  id: string;
+  quantity: number;
+  purchasePrice: number;
+  purchaseDate: string;
 };
 
 type AddItemPayload = {
@@ -16,7 +23,26 @@ type AddItemPayload = {
   type: string;
   stock: number;
   minStock?: number;
+  purchasePrice: number;
+  purchaseDate: string;
 };
+
+type UpdateItemPayload = {
+  id: string;
+  mark: string;
+  model: string;
+  type: string;
+  stock: number;
+  minStock: number;
+  purchaseHistory?: PurchaseRecord[];
+
+};
+
+type DropStockPayload = {
+  id: string;
+  amount: number;
+};
+
 const initialState: StockItem[] = [
   {
     id: "1",
@@ -25,6 +51,7 @@ const initialState: StockItem[] = [
     type: "Klima",
     stock: 8,
     minStock: 5,
+    purchaseHistory: [],
   },
   {
     id: "2",
@@ -33,6 +60,7 @@ const initialState: StockItem[] = [
     type: "Klima",
     stock: 3,
     minStock: 5,
+    purchaseHistory: [],
   },
 ];
 
@@ -43,22 +71,6 @@ const stockSlice = createSlice({
     addItem(state, action: PayloadAction<AddItemPayload>) {
       const incoming = action.payload;
 
-      const existing = state.find(
-        (item) =>
-          item.mark === incoming.mark &&
-          item.model === incoming.model &&
-          item.type === incoming.type,
-      );
-
-      if (existing) {
-        existing.stock = Math.max(0, existing.stock + incoming.stock);
-
-        if (incoming.minStock !== undefined) {
-          existing.minStock = incoming.minStock;
-        }
-        return;
-      }
-
       state.unshift({
         id: nanoid(),
         mark: incoming.mark,
@@ -66,13 +78,43 @@ const stockSlice = createSlice({
         type: incoming.type,
         stock: incoming.stock,
         minStock: incoming.minStock ?? 0,
+        purchaseHistory: [
+          {
+            id: nanoid(),
+            quantity: incoming.stock,
+            purchasePrice: incoming.purchasePrice,
+            purchaseDate: incoming.purchaseDate,
+          },
+        ],
       });
     },
+    updateItem(state, action: PayloadAction<UpdateItemPayload>) {
+      const item = state.find((stock) => stock.id === action.payload.id);
+
+      if (item) {
+        item.mark = action.payload.mark;
+        item.model = action.payload.model;
+        item.type = action.payload.type;
+        item.stock = action.payload.stock;
+        item.minStock = action.payload.minStock;
+        item.purchaseHistory = action.payload.purchaseHistory ?? [];
+
+      }
+    },
+    dropStock(state, action: PayloadAction<DropStockPayload>) {
+      const item = state.find((stock) => stock.id === action.payload.id);
+
+      if (item) {
+        item.stock = Math.max(0, item.stock - action.payload.amount);
+      }
+    },
+
     removeItem(state, action: PayloadAction<string>) {
       return state.filter((item) => item.id !== action.payload);
     },
   },
 });
 
-export const { addItem, removeItem } = stockSlice.actions;
+export const { addItem, updateItem, dropStock, removeItem } =
+  stockSlice.actions;
 export default stockSlice.reducer;
