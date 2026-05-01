@@ -7,8 +7,15 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../../store/store";
 import { deleteTask } from "../../../store/tasksSlice";
+import { addStock } from "../../../store/stockSlice";
 
-const TaskCard = ({ task }: { task: Task }) => {
+const TaskCard = ({
+  task,
+  onEdit,
+}: {
+  task: Task;
+  onEdit?: (taskId: string) => void;
+}) => {
   const {
     attributes,
     listeners,
@@ -37,6 +44,15 @@ const TaskCard = ({ task }: { task: Task }) => {
     const ok = window.confirm("Bu gorevi silmek istiyor musunuz?");
     if (!ok) return;
 
+    task.stockDrops.forEach((drop) => {
+      dispatch(
+        addStock({
+          id: drop.stockId,
+          amount: drop.qty,
+        }),
+      );
+    });
+
     dispatch(deleteTask(task.id));
   };
 
@@ -47,6 +63,10 @@ const TaskCard = ({ task }: { task: Task }) => {
       {...attributes}
       {...listeners}
       elevation={1}
+      onClick={() => {
+        if (isDragging) return;
+        onEdit?.(task.id);
+      }}
       sx={{ borderRadius: 2, cursor: "pointer", position: "relative" }}
     >
       <CardContent sx={{ pb: "16px !important" }}>
@@ -78,10 +98,12 @@ const TaskCard = ({ task }: { task: Task }) => {
                 .join(", ")}`}
             </Typography>
           ) : null}
+
           <IconButton
             size="small"
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             onClick={handleDelete}
             sx={{
               position: "absolute",

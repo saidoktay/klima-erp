@@ -9,36 +9,59 @@ import {
   createFilterOptions,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Adress } from "./Adress/Adress";
 import { useDispatch } from "react-redux";
-import { addTask } from "../../../../store/tasksSlice";
+import { addTask, updateTask } from "../../../../store/tasksSlice";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../../store/store";
 import { addOption } from "../../../../store/taskOptionsSlice";
 import StockDrop from "./StockDrop/StockDrop";
-import type { StockDropItem } from "../../../../types/task";
-import { dropStock } from "../../../../store/stockSlice";
+import type { Task, StockDropItem } from "../../../../types/task";
+import { addStock, dropStock } from "../../../../store/stockSlice";
+import { recordCompletedTask } from "../../../../store/customersSlice";
 
 const filter = createFilterOptions<string>();
+type AddTodoProps = {
+  onSuccess?: () => void;
+  task?: Task | null;
+};
 
-const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
+const AddTodo = ({ onSuccess, task }: AddTodoProps) => {
   const [form, setForm] = useState({
-    taskType: "",
-    customerName: "",
-    customerNumber: "",
-    address: {
+    taskType: task?.taskType ?? "",
+    customerName: task?.customerName ?? "",
+    customerNumber: task?.customerNumber ?? "",
+    address: task?.address ?? {
       city: "",
       district: "",
       quarter: "",
       detail: "",
     },
-    work: "",
-    price: "",
-    assignedPersonnelId: "",
-    stockDrops: [] as StockDropItem[],
+    work: task?.work ?? "",
+    price: task?.price ?? "",
+    assignedPersonnelId: task?.assignedPersonnelId ?? "",
+    stockDrops: task?.stockDrops ?? ([] as StockDropItem[]),
   });
+
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
+  const [editingStockDrop, setEditingStockDrop] =
+    useState<StockDropItem | null>(null);
+
+  useEffect(() => {
+    if (!task) return;
+
+    setForm({
+      taskType: task.taskType,
+      customerName: task.customerName,
+      customerNumber: task.customerNumber,
+      address: task.address,
+      work: task.work,
+      price: task.price,
+      assignedPersonnelId: task.assignedPersonnelId,
+      stockDrops: task.stockDrops,
+    });
+  }, [task]);
 
   const options = useSelector((state: RootState) => state.taskOptions);
   const personnel = useSelector((state: RootState) => state.personnel);
@@ -70,7 +93,20 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
   };
   const dispatch = useDispatch();
   const handleAddStockDrop = (item: StockDropItem) => {
-    setForm((p) => ({ ...p, stockDrops: [...p.stockDrops, item] }));
+    setForm((p) => {
+      const exists = p.stockDrops.some((drop) => drop.stockId === item.stockId);
+
+      if (!exists) {
+        return { ...p, stockDrops: [...p.stockDrops, item] };
+      }
+
+      return {
+        ...p,
+        stockDrops: p.stockDrops.map((drop) =>
+          drop.stockId === item.stockId ? { ...drop, qty: item.qty } : drop,
+        ),
+      };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -91,8 +127,27 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
     dispatch(addOption({ key: "works", value: form.work }));
     dispatch(addOption({ key: "prices", value: form.price }));
 
-    dispatch(
-      addTask({
+    if (task) {
+      task.stockDrops.forEach((drop) => {
+        dispatch(
+          addStock({
+            id: drop.stockId,
+            amount: drop.qty,
+          }),
+        );
+      });
+
+      form.stockDrops.forEach((drop) => {
+        dispatch(
+          dropStock({
+            id: drop.stockId,
+            amount: drop.qty,
+          }),
+        );
+      });
+
+      const updatedTask = {
+        ...task,
         taskType: form.taskType,
         customerName: form.customerName,
         customerNumber: form.customerNumber,
@@ -100,19 +155,38 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
         work: form.work,
         price: form.price,
         assignedPersonnelId: form.assignedPersonnelId,
-        status: "todo",
         stockDrops: form.stockDrops,
-      }),
-    );
+      };
 
-    form.stockDrops.forEach((drop) => {
+      dispatch(updateTask(updatedTask));
+
+      if (updatedTask.status === "done") {
+        dispatch(recordCompletedTask(updatedTask));
+      }
+    } else {
       dispatch(
-        dropStock({
-          id: drop.stockId,
-          amount: drop.qty,
+        addTask({
+          taskType: form.taskType,
+          customerName: form.customerName,
+          customerNumber: form.customerNumber,
+          address: form.address,
+          work: form.work,
+          price: form.price,
+          assignedPersonnelId: form.assignedPersonnelId,
+          status: "todo",
+          stockDrops: form.stockDrops,
         }),
       );
-    });
+
+      form.stockDrops.forEach((drop) => {
+        dispatch(
+          dropStock({
+            id: drop.stockId,
+            amount: drop.qty,
+          }),
+        );
+      });
+    }
 
     setForm({
       taskType: "",
@@ -211,7 +285,10 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "3fr 1fr 1.5fr 1fr",
+            gridTemplateColumns:
+              task && form.stockDrops.length > 0
+                ? "3fr 1fr 1fr"
+                : "3fr 1fr 1.5fr 1fr",
             gap: "5px",
           }}
         >
@@ -250,15 +327,21 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
             ) : null}
           </FormControl>
 
-          <Button
-            type="button"
-            variant="outlined"
-            fullWidth
-            sx={{ height: 56 }}
-            onClick={() => setStockDialogOpen(true)}
-          >
-            Stok Düş
-          </Button>
+          {!task || form.stockDrops.length === 0 ? (
+            <Button
+              type="button"
+              variant="outlined"
+              fullWidth
+              sx={{ height: 56 }}
+              onClick={() => {
+                setEditingStockDrop(null);
+                setStockDialogOpen(true);
+              }}
+            >
+              Stok Düş
+            </Button>
+          ) : null}
+
           <FormControl fullWidth error={errors.price}>
             <Autocomplete
               freeSolo
@@ -279,14 +362,54 @@ const AddTodo = ({ onSuccess }: { onSuccess?: () => void }) => {
             ) : null}
           </FormControl>
         </Box>
+        {form.stockDrops.length > 0 ? (
+          <Box sx={{ display: "grid", gap: 1 }}>
+            <Typography fontWeight={700}>Düşülen Stoklar</Typography>
+
+            {form.stockDrops.map((drop) => (
+              <Box
+                key={drop.stockId}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  border: "1px solid #ddd",
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 1,
+                }}
+              >
+                <Typography variant="body2">
+                  {`${drop.type} / ${drop.mark} / ${drop.model} x${drop.qty}`}
+                </Typography>
+
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    setEditingStockDrop(drop);
+                    setStockDialogOpen(true);
+                  }}
+                >
+                  Düzenle
+                </Button>
+              </Box>
+            ))}
+          </Box>
+        ) : null}
+
         <StockDrop
           open={stockDialogOpen}
-          onClose={() => setStockDialogOpen(false)}
+          onClose={() => {
+            setStockDialogOpen(false);
+            setEditingStockDrop(null);
+          }}
           onStockDrop={handleAddStockDrop}
+          selectedDrop={editingStockDrop}
         />
 
         <Button type="submit" variant="contained">
-          Kaydet
+          {task ? "Güncelle" : "Kaydet"}
         </Button>
       </Stack>
     </Box>

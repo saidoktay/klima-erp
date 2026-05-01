@@ -4,22 +4,28 @@ import AddIcon from "@mui/icons-material/Add";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store/store";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 type TaskColumnProps = {
   boardtitle: string;
   status: "todo" | "inprogress" | "done";
   addButton?: boolean;
   onAddClick?: () => void;
+  onEditTask?: (taskId: string) => void;
 };
+
 const TaskColumn = ({
   boardtitle,
   status,
   addButton,
   onAddClick,
+  onEditTask,
 }: TaskColumnProps) => {
   const tasks = useSelector((state: RootState) =>
-    state.tasks.filter((t) => t.status === status)
+    state.tasks.filter((t) => t.status === status),
   );
   const { setNodeRef } = useDroppable({
     id: status,
@@ -62,13 +68,13 @@ const TaskColumn = ({
           ) : null}
         </Stack>
 
-         <SortableContext
+        <SortableContext
           items={tasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
         >
           <Stack spacing={1.5}>
             {tasks.map((task) => (
-              <TaskCard key={task.id} task={task} />
+              <TaskCard key={task.id} task={task} onEdit={onEditTask} />
             ))}
           </Stack>
         </SortableContext>

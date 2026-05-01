@@ -35,10 +35,13 @@ type UpdateItemPayload = {
   stock: number;
   minStock: number;
   purchaseHistory?: PurchaseRecord[];
-
 };
 
 type DropStockPayload = {
+  id: string;
+  amount: number;
+};
+type AddStockPayload = {
   id: string;
   amount: number;
 };
@@ -98,7 +101,6 @@ const stockSlice = createSlice({
         item.stock = action.payload.stock;
         item.minStock = action.payload.minStock;
         item.purchaseHistory = action.payload.purchaseHistory ?? [];
-
       }
     },
     dropStock(state, action: PayloadAction<DropStockPayload>) {
@@ -108,6 +110,13 @@ const stockSlice = createSlice({
         item.stock = Math.max(0, item.stock - action.payload.amount);
       }
     },
+    addStock(state, action: PayloadAction<AddStockPayload>) {
+      const item = state.find((stock) => stock.id === action.payload.id);
+
+      if (item) {
+        item.stock = item.stock + action.payload.amount;
+      }
+    },
 
     removeItem(state, action: PayloadAction<string>) {
       return state.filter((item) => item.id !== action.payload);
@@ -115,6 +124,6 @@ const stockSlice = createSlice({
   },
 });
 
-export const { addItem, updateItem, dropStock, removeItem } =
+export const { addItem, updateItem, dropStock, addStock, removeItem } =
   stockSlice.actions;
 export default stockSlice.reducer;

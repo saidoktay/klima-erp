@@ -6,6 +6,11 @@ import { MainLayout } from "./layout/MainLayout";
 import {Stock} from "./pages/Stock/Stock";
 import Credit from "./pages/Credit/Credit";
 import Personnel from "./pages/Personnel/Personnel";
+import Settings from "./pages/Settings/Settings";
+import Customers from "./pages/Customers/Customers";
+
+
+
 
 
 function App() {
@@ -18,6 +23,10 @@ function App() {
           <Route path="/stock" element={ <Stock/> } />
           <Route path="/dept" element={ <Credit/> } />
           <Route path="/personnel" element={<Personnel />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/customers" element={<Customers />} />
+
+
 
         </Route>
       </Routes>
