@@ -1,4 +1,5 @@
 import TaskIcon from "@mui/icons-material/Checklist";
+import PeopleIcon from "@mui/icons-material/People";
 
 import { PackageSearch as StockIcon } from "lucide-react";
 import { Notebook as DeptIcon } from "lucide-react";
@@ -11,15 +12,23 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
+  Typography,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../image/logo/logo.png";
 import { Users as PersonnelIcon } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
 
 const drawerWidth = 240;
 
 const Sidebar = () => {
   const location = useLocation();
+  const { companyLogo, companyName } = useSelector(
+    (state: RootState) => state.settings,
+  );
+
   return (
     <Drawer
       variant="permanent"
@@ -35,12 +44,32 @@ const Sidebar = () => {
       <Toolbar
         sx={{
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: 64,
+          minHeight: 90,
+          py: 2,
         }}
       >
-        <Box component="img" src={logo} alt="" sx={{ width: 120 }} />
+        <Box
+          component="img"
+          src={companyLogo || logo}
+          alt=""
+          sx={{ width: 120 }}
+        />
+
+        {companyName && (
+          <Typography
+            variant="subtitle1"
+            sx={{
+              mt: 1,
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            {companyName}
+          </Typography>
+        )}
       </Toolbar>
 
       <Box sx={{ overflow: "auto" }}>
@@ -83,6 +112,20 @@ const Sidebar = () => {
               </ListItemIcon>
             </ListItemButton>
           </ListItem>
+
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/customers"
+              selected={location.pathname === "/customers"}
+            >
+              <ListItemText primary="Müşteriler" />
+              <ListItemIcon>
+                <PeopleIcon />
+              </ListItemIcon>
+            </ListItemButton>
+          </ListItem>
+
           <ListItem disablePadding>
             <ListItemButton
               component={Link}
@@ -92,6 +135,18 @@ const Sidebar = () => {
               <ListItemText primary="Personel" />
               <ListItemIcon>
                 <PersonnelIcon size={30} />
+              </ListItemIcon>
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/settings"
+              selected={location.pathname === "/settings"}
+            >
+              <ListItemText primary="Ayarlar" />
+              <ListItemIcon>
+                <SettingsIcon size={30} />
               </ListItemIcon>
             </ListItemButton>
           </ListItem>

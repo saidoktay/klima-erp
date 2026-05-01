@@ -3,19 +3,41 @@ import TaskColumn from "../Task/TaskColumn";
 import { useState } from "react";
 import AddTodo from "./AddTodo/AddTodo";
 import CloseIcon from "@mui/icons-material/Close";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+
 import type { DragEndEvent } from "@dnd-kit/core";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../../store/store";
 import { moveTask } from "../../../store/tasksSlice";
 import { DragOverlay } from "@dnd-kit/core";
 import type { DragStartEvent } from "@dnd-kit/core";
+import {
+  recordCompletedTask,
+  removeCompletedTask,
+} from "../../../store/customersSlice";
 
 const TaskBoard = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const [openAdd, setOpenAdd] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+  );
+
   const tasks = useSelector((state: RootState) => state.tasks);
+  const editingTask = tasks.find((t) => t.id === editingTaskId) ?? null;
+
   const personnel = useSelector((state: RootState) => state.personnel);
 
   const tasksByStatus = {
@@ -27,7 +49,10 @@ const TaskBoard = () => {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      setActiveId(null);
+      return;
+    }
 
     const activeId = String(active.id);
     const overId = String(over.id);
@@ -46,6 +71,17 @@ const TaskBoard = () => {
     const targetIndex = overTask
       ? targetList.findIndex((t) => t.id === overId)
       : targetList.length;
+    if (activeTask.status !== "done" && targetStatus === "done") {
+      dispatch(
+        recordCompletedTask({
+          ...activeTask,
+          status: "done",
+        }),
+      );
+    }
+    if (activeTask.status === "done" && targetStatus !== "done") {
+      dispatch(removeCompletedTask(activeTask));
+    }
 
     dispatch(
       moveTask({
@@ -65,6 +101,7 @@ const TaskBoard = () => {
   );
   return (
     <DndContext
+      sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       collisionDetection={closestCenter}
@@ -83,9 +120,18 @@ const TaskBoard = () => {
             boardtitle="Yapılacak"
             addButton
             onAddClick={() => setOpenAdd(true)}
+            onEditTask={setEditingTaskId}
           />
-          <TaskColumn boardtitle="Yapım Aşamasında" status="inprogress" />
-          <TaskColumn boardtitle="Yapıldı" status="done" />
+          <TaskColumn
+            boardtitle="Yapım Aşamasında"
+            status="inprogress"
+            onEditTask={setEditingTaskId}
+          />
+          <TaskColumn
+            boardtitle="Yapıldı"
+            status="done"
+            onEditTask={setEditingTaskId}
+          />
         </Box>
         <Modal open={openAdd} onClose={() => setOpenAdd(false)}>
           <Box
@@ -115,6 +161,42 @@ const TaskBoard = () => {
             </Box>
 
             <AddTodo onSuccess={() => setOpenAdd(false)} />
+          </Box>
+        </Modal>
+        <Modal
+          open={editingTask !== null}
+          onClose={() => setEditingTaskId(null)}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              p: 2,
+              borderRadius: 2,
+              minWidth: 800,
+              outline: "none",
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setEditingTaskId(null)}
+              aria-label="close"
+              sx={{ position: "absolute", top: 2, right: 2 }}
+            >
+              <CloseIcon />
+            </IconButton>
+
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Typography variant="h4">İş Düzenle</Typography>
+            </Box>
+
+            <AddTodo
+              task={editingTask}
+              onSuccess={() => setEditingTaskId(null)}
+            />
           </Box>
         </Modal>
       </Box>

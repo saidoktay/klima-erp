@@ -18,6 +18,13 @@ const tasksSlice = createSlice({
         return { payload: { ...payload, id: nanoid() } };
       },
     },
+    updateTask(state, action: PayloadAction<Task>) {
+      const index = state.findIndex((t) => t.id === action.payload.id);
+      if (index !== -1) {
+        state[index] = action.payload;
+      }
+    },
+
     updateTaskStatus(
       state,
       action: PayloadAction<{ taskId: string; newStatus: Task["status"] }>,
@@ -83,5 +90,6 @@ const tasksSlice = createSlice({
   },
 });
 
-export const { addTask, updateTaskStatus, moveTask, deleteTask } = tasksSlice.actions;
+export const { addTask, updateTask, updateTaskStatus, moveTask, deleteTask } =
+  tasksSlice.actions;
 export default tasksSlice.reducer;

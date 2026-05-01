@@ -12,21 +12,28 @@ import {
 import type { StockDropItem } from "../../../../../types/task";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../../../store/store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type StockDropProps = {
   open: boolean;
   onClose: () => void;
   onStockDrop: (item: StockDropItem) => void;
+  selectedDrop?: StockDropItem | null;
 };
 
-const StockDrop = ({ open, onClose, onStockDrop }: StockDropProps) => {
+const StockDrop = ({
+  open,
+  onClose,
+  onStockDrop,
+  selectedDrop,
+}: StockDropProps) => {
   const stocks = useSelector((state: RootState) => state.stock);
 
   const [type, setType] = useState("");
   const [mark, setMark] = useState("");
   const [model, setModel] = useState("");
   const [qty, setQty] = useState(0);
+  const [stockError, setStockError] = useState("");
 
   const typeOptions = Array.from(new Set(stocks.map((s) => s.type)));
 
@@ -44,6 +51,15 @@ const StockDrop = ({ open, onClose, onStockDrop }: StockDropProps) => {
   const matchingStocks = stocks.filter(
     (s) => s.type === type && s.mark === mark && s.model === model,
   );
+  const selectedStockItem = stocks.find(
+    (s) => s.type === type && s.mark === mark && s.model === model,
+  );
+  const editingQty =
+    selectedDrop && selectedDrop.stockId === selectedStockItem?.id
+      ? selectedDrop.qty
+      : 0;
+
+  const availableStock = (selectedStockItem?.stock ?? 0) + editingQty;
 
   const hasDuplicateStock = matchingStocks.length > 1;
   const resetForm = () => {
@@ -51,27 +67,48 @@ const StockDrop = ({ open, onClose, onStockDrop }: StockDropProps) => {
     setMark("");
     setModel("");
     setQty(0);
+    setStockError("");
   };
 
   const onAddStockDrop = () => {
+    setStockError("");
+
     if (!type || !mark || !model || qty <= 0) return;
 
-    const stockItem = stocks.find(
-      (s) => s.type === type && s.mark === mark && s.model === model,
-    );
-    if (!stockItem) return;
+    if (!selectedStockItem) return;
+
+    if (qty > availableStock) {
+      setStockError(
+        `Yetersiz stok. Kullanılabilir stok: ${availableStock}, istenen: ${qty}`,
+      );
+      return;
+    }
 
     onStockDrop({
-      stockId: stockItem.id,
-      type: stockItem.type,
-      mark: stockItem.mark,
-      model: stockItem.model,
+      stockId: selectedStockItem.id,
+      type: selectedStockItem.type,
+      mark: selectedStockItem.mark,
+      model: selectedStockItem.model,
       qty,
     });
 
     resetForm();
     onClose();
   };
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (!selectedDrop) {
+      resetForm();
+      return;
+    }
+
+    setType(selectedDrop.type);
+    setMark(selectedDrop.mark);
+    setModel(selectedDrop.model);
+    setQty(selectedDrop.qty);
+  }, [open, selectedDrop]);
 
   return (
     <Dialog
@@ -127,9 +164,15 @@ const StockDrop = ({ open, onClose, onStockDrop }: StockDropProps) => {
             label="Adet"
             type="number"
             value={qty}
-            onChange={(e) => setQty(Number(e.target.value || 0))}
+            onChange={(e) => {
+              setQty(Number(e.target.value || 0));
+              setStockError("");
+            }}
+            error={Boolean(stockError)}
+            helperText={stockError}
             fullWidth
           />
+
           {hasDuplicateStock && (
             <Alert severity="warning">
               Bu modelden birden fazla kayıt var. Stok düşme işlemi ilk bulunan
